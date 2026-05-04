@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:workers_campe/screens/homepage.dart';
+import 'package:workers_campe/screens/profilepage.dart';
 
 class Aftershiftpage extends StatelessWidget{
   const Aftershiftpage({super.key});
@@ -76,12 +78,36 @@ class Aftershiftpage extends StatelessWidget{
           ]
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(16),
-        child: ElevatedButton(
-          onPressed: () {}, 
-          child: Icon(Icons.home))
-      ),
+      bottomNavigationBar:  BottomNavigationBar(
+          currentIndex: 1,
+          selectedItemColor: Colors.green,
+          unselectedItemColor: Colors.grey,
+          onTap: (index) {
+            if (index == 2) {
+              // _toLoginPage(context);
+            } else if (index == 0){
+              Navigator.pop(context);
+            } else if (index == 1){
+              Navigator.of(context).pushReplacement(
+                 MaterialPageRoute(builder: (context) => Profilepage()),
+              );
+            }
+          },
+          items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "User",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
+            label: "Logout",
+          ),
+        ],
+        ),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workers_campe/screens/aftershift.dart';
+import 'package:workers_campe/screens/profilepage.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -187,6 +189,8 @@ class HomePage extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => Aftershiftpage()));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Attività terminata")),
                     );
@@ -212,7 +216,11 @@ class HomePage extends StatelessWidget {
         onTap: (index) {
           if (index == 2) {
             _toLoginPage(context);
-          }
+          } else if (index == 1){
+             Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => Profilepage()),
+            );
+          } 
         },
         items: const [
           BottomNavigationBarItem(
@@ -240,4 +248,5 @@ class HomePage extends StatelessWidget {
     MaterialPageRoute(builder: (context) => LoginPage()),
   );
   }
+
 } //HomePage
