@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workers_campe/screens/homepage.dart';
 
 class Profilepage extends StatelessWidget {
   const Profilepage({super.key});
@@ -77,7 +78,37 @@ class Profilepage extends StatelessWidget {
               )
 
           ],),
+
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 1,
+          selectedItemColor: Colors.green,
+          unselectedItemColor: Colors.grey,
+          onTap: (index) {
+            if (index == 2) {
+              // _toLoginPage(context);
+            } else if (index == 0){
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+            } 
+          },
+          items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "User",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
+            label: "Logout",
+          ),
+        ],
+        ),
     );
   }
+  
 }
 
