@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
 class Profilepage extends StatelessWidget {
@@ -10,8 +11,9 @@ class Profilepage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Profile Page", style: Theme.of(context).textTheme.headlineSmall),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 187, 186, 179),
-        actions: [Icon(Icons.home)],
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        actions: [Icon(Icons.settings)],
       ) ,
 
       body: Column(
@@ -25,60 +27,141 @@ class Profilepage extends StatelessWidget {
                   child: Card(),
                   ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 1),
               SizedBox( width: 200, 
-                        child: ElevatedButton(
-                                  onPressed: (){}, 
-                                  child: const Text("Edit profile"),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,),
-                                  ),
-                      ),
-              const SizedBox(height: 10),
-              const Divider(),
-              const SizedBox(height: 10),
+                        child: Column(
+                          children: [
+                            Text("Kahshar Cognome", style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),),
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                                      onPressed: (){}, 
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.black,),
+                                      child: const Text("Edit profile"),
+                                      ),
+                          ],
+                        ),
+                ),
 
-              ListTile(
-                leading: Container(
-                  width: 30, height: 430,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: const Color.fromARGB(255, 172, 176, 182),
+              const Divider(),
+
+              Card( 
+                color: Colors.lightGreen, //light,
+                child: Container(
+                  margin: const EdgeInsets.all(10),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 50,),
+                      Column(
+                        children: [
+                          Text("Biografia", style: TextStyle(fontWeight: FontWeight.bold,),),
+                          SizedBox(height: 10,),
+                          Text("Gender"),
+                          SizedBox(height: 10,),
+                          Text("Weight"),
+                          SizedBox(height: 10,),
+                          Text("Height"),
+                          SizedBox(height: 10,),
+                          Text("City"),
+                          SizedBox(height: 10,),
+                          Text("Agency"),
+                          SizedBox(height: 10,),
+                          Text("Total Km"),
+                        ],
+                      ),
+                      SizedBox(width: 100,),
+                      Column(
+                        children: [
+                          Text(""),
+                          SizedBox(height: 10,),
+                          Text("M"),
+                          SizedBox(height: 10,),
+                          Text("70 Kg"),
+                          SizedBox(height: 10,),
+                          Text("170 cm"),
+                          SizedBox(height: 10,),
+                          Text("Padua (PD)"),
+                          SizedBox(height: 10,),
+                          Text("Deliveroo"),
+                          SizedBox(height: 10,),
+                          Text("1500 Km"),
+                          
+                        ],
+                      ),
+                    ],
                   ),
-                  child: Icon(Icons.settings),
-                  ),
-                  title: Text("Settings"),
-                 
+                ),
               ),
 
-              Text("Age"),
-              Text("Gender"),
-              Text("Weight"),
-              Text("Height"),
-              Text("City"),
-              Text("Agency"),
-              Text("Total Km"),
+              const Divider(),
+              SizedBox(
+                width: 400,
+                child: Column( children: [
+                  Row(children: [
+                    Text("Trophy Case", style: TextStyle(fontWeight: FontWeight.bold,),),
+                    const Spacer(),
+                    Text("130")
+                  ],),
+                  const SizedBox(height: 10,),
+                  Row( children: [
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(120, 120),
+                        shape: StarBorder(),
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
+                      ),
+                      child: Icon(Icons.bike_scooter, size: 20,), 
+                    ),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(120, 120),
+                        shape: StarBorder(),
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
+                      ),
+                      child: Icon(Icons.pedal_bike, size: 20,), 
+                    ),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(120, 120),
+                        shape: StarBorder(),
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
+                      ),
+                      child: Icon(Icons.electric_bike, size: 20,),
+                    ),
+                    
+                  ],)
+                ],
+                ),
+
+              ),
+
               const Spacer(),
 
               Card(
-                color: Colors.greenAccent,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                  Icon(Icons.star),
-                  const SizedBox(width: 30),
-                  Column(children: [
-                    Text("REACHED PRIZES:"),
-                    Row( children: [
-                      Icon(Icons.money),
+                color: Colors.lightGreen,
+                child: Column(children: [
+                    Text("TOTAL REACHED PRIZES:", style: TextStyle(fontWeight: FontWeight.bold,),),
+                    Row( 
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                      Icon(Icons.attach_money, color: Colors.green,),
+                      const SizedBox(width: 10,),
                       Text("20 Euros")
                     ])
                   ],)
-                ],)
               )
 
           ],),
-
+        
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: 1,
           selectedItemColor: Colors.green,
