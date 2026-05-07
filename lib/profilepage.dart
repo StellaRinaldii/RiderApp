@@ -11,7 +11,7 @@ class Profilepage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Profile Page", style: Theme.of(context).textTheme.headlineSmall),
         centerTitle: true,
-        backgroundColor: kGreen,
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [Icon(Icons.settings)],
       ) ,
@@ -36,7 +36,7 @@ class Profilepage extends StatelessWidget {
                             ElevatedButton(
                                       onPressed: (){}, 
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: kGreen,
+                                        backgroundColor: Colors.green,
                                         foregroundColor: Colors.black,),
                                       child: const Text("Edit profile"),
                                       ),
@@ -47,7 +47,7 @@ class Profilepage extends StatelessWidget {
               const Divider(),
 
               Card( 
-                color: kGreenLight,
+                color: Colors.lightGreen, //light,
                 child: Container(
                   margin: const EdgeInsets.all(10),
                   child: Row(
@@ -110,8 +110,8 @@ class Profilepage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(120, 120),
                         shape: StarBorder(),
-                        backgroundColor: kGreen, // Colore di sfondo
-                        foregroundColor: kGreenLight, // Colore del testo/icona
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
                       ),
                       child: Icon(Icons.bike_scooter, size: 20,), 
                     ),
@@ -121,8 +121,8 @@ class Profilepage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(120, 120),
                         shape: StarBorder(),
-                        backgroundColor: kGreen, // Colore di sfondo
-                        foregroundColor: kGreenLight, // Colore del testo/icona
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
                       ),
                       child: Icon(Icons.pedal_bike, size: 20,), 
                     ),
@@ -132,8 +132,8 @@ class Profilepage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(120, 120),
                         shape: StarBorder(),
-                        backgroundColor: kGreen, // Colore di sfondo
-                        foregroundColor: kGreenLight, // Colore del testo/icona
+                        backgroundColor: Colors.green, // Colore di sfondo
+                        foregroundColor: Colors.lightGreen, // Colore del testo/icona
                       ),
                       child: Icon(Icons.electric_bike, size: 20,),
                     ),
@@ -147,13 +147,13 @@ class Profilepage extends StatelessWidget {
               const Spacer(),
 
               Card(
-                color: kGreenLight,
+                color: Colors.lightGreen,
                 child: Column(children: [
                     Text("TOTAL REACHED PRIZES:", style: TextStyle(fontWeight: FontWeight.bold,),),
                     Row( 
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                      Icon(Icons.attach_money, color: kGreen,),
+                      Icon(Icons.attach_money, color: Colors.green,),
                       const SizedBox(width: 10,),
                       Text("20 Euros")
                     ])
