@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/homepage.dart';
+import 'package:workers_campe/screens/login.dart';
 import 'package:workers_campe/screens/profilepage.dart';
 
 class Aftershiftpage extends StatelessWidget{
@@ -84,7 +85,12 @@ class Aftershiftpage extends StatelessWidget{
           unselectedItemColor: Colors.grey,
           onTap: (index) {
             if (index == 2) {
-              // _toLoginPage(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                (route) => false,
+              );
+              // _toLogoutPage(context);
             } else if (index == 0){
               Navigator.pop(context);
             } else if (index == 1){

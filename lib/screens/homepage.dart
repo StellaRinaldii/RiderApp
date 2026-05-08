@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
   final int points = 1250;
-  final double effort = 0.80;
+  final double effort = 0.8;
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
 import 'package:workers_campe/screens/homepage.dart';
+import 'package:workers_campe/screens/login.dart';
 
 class Profilepage extends StatelessWidget {
   const Profilepage({super.key});
@@ -168,7 +169,10 @@ class Profilepage extends StatelessWidget {
           unselectedItemColor: Colors.grey,
           onTap: (index) {
             if (index == 2) {
-              // _toLoginPage(context);
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              )
+            ;
             } else if (index == 0){
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => HomePage()),
