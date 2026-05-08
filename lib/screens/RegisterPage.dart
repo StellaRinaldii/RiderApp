@@ -48,160 +48,181 @@ class _RegisterPageState extends State<RegisterPage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Container(
-              padding: EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: <Widget>[
-                  CircleAvatar(
-                    radius: 38,
-                    backgroundColor: kGreenLight,
-                    child: Icon(Icons.directions_bike, size: 46, color: kGreen),
-                  ),
-
-                  SizedBox(height: 12),
-
-                  Text(
-                    'Ride protected. Deliver more.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-
-                  SizedBox(height: 28),
-
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: inputStyle(
-                      'Email',
-                      'Enter a valid email',
-                      Icons.email_outlined,
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-
-                  TextField(
-                    obscureText: true,
-                    controller: passwordController,
-                    decoration: inputStyle(
-                      'Password',
-                      'Choose a password',
-                      Icons.lock_outline,
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-
-                  TextField(
-                    obscureText: true,
-                    controller: confirmPasswordController,
-                    decoration: inputStyle(
-                      'Confirm Password',
-                      'Repeat the password',
-                      Icons.lock_outline,
-                    ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  SizedBox(
-                    height: 52,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kGreen,
-                        foregroundColor: Colors.white,
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(22),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 12,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      onPressed: () async {
-                        if (emailController.text.isEmpty ||
-                            passwordController.text.isEmpty ||
-                            confirmPasswordController.text.isEmpty) {
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(
-                              SnackBar(
-                                content: Text('Please fill in all fields'),
-                                backgroundColor: Colors.orange,
+                      child: Column(
+                        children: <Widget>[
+                          CircleAvatar(
+                            radius: 38,
+                            backgroundColor: kGreenLight,
+                            child: Icon(
+                              Icons.directions_bike,
+                              size: 46,
+                              color: kGreen,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'Ride protected. Deliver more.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          SizedBox(height: 28),
+                          TextField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: inputStyle(
+                              'Email',
+                              'Enter a valid email',
+                              Icons.email_outlined,
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            obscureText: true,
+                            controller: passwordController,
+                            decoration: inputStyle(
+                              'Password',
+                              'Choose a password',
+                              Icons.lock_outline,
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            obscureText: true,
+                            controller: confirmPasswordController,
+                            decoration: inputStyle(
+                              'Confirm Password',
+                              'Repeat the password',
+                              Icons.lock_outline,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          SizedBox(
+                            height: 52,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
                               ),
-                            );
-                          return;
-                        }
+                              onPressed: () async {
+                                if (emailController.text.isEmpty ||
+                                    passwordController.text.isEmpty ||
+                                    confirmPasswordController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context)
+                                    ..removeCurrentSnackBar()
+                                    ..showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Please fill in all fields',
+                                        ),
+                                        backgroundColor: Colors.orange,
+                                      ),
+                                    );
+                                  return;
+                                }
 
-                        if (passwordController.text !=
-                            confirmPasswordController.text) {
-                          ScaffoldMessenger.of(context)
-                            ..removeCurrentSnackBar()
-                            ..showSnackBar(
-                              SnackBar(
-                                content: Text('Passwords do not match'),
-                                backgroundColor: Colors.red,
+                                if (passwordController.text !=
+                                    confirmPasswordController.text) {
+                                  ScaffoldMessenger.of(context)
+                                    ..removeCurrentSnackBar()
+                                    ..showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Passwords do not match',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  return;
+                                }
+
+                                final sharedPreferences =
+                                    await SharedPreferences.getInstance();
+
+                                await sharedPreferences.setString(
+                                  'userEmail',
+                                  emailController.text,
+                                );
+                                await sharedPreferences.setString(
+                                  'userPassword',
+                                  passwordController.text,
+                                );
+                                await sharedPreferences.setBool(
+                                  'isUserLogged',
+                                  true,
+                                );
+
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => Profilepage(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                              child: Text(
+                                'Create Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            );
-                          return;
-                        }
-
-                        final sharedPreferences =
-                            await SharedPreferences.getInstance();
-
-                        await sharedPreferences.setString(
-                            'userEmail', emailController.text);
-                        await sharedPreferences.setString(
-                            'userPassword', passwordController.text);
-                        await sharedPreferences.setBool('isUserLogged', true);
-
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (_) => Profilepage()),
-                          (route) => false,
-            );
-                      },
-                      child: Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            ),
+                          ),
+                          SizedBox(height: 22),
+                          Text(
+                            'We only use your data to improve your experience and keep you safe on the road.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 22),
-
-                  Text(
-                    '🚴 By creating an account you agree to our Terms of Service and Privacy Policy. '
-                    'Your data is used solely for your personal statistics.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              SizedBox(height: 12),
+              Text(
+                "By creating an account, you agree to rAIDer's\nTerms & Conditions and Privacy Policy",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ),
         ),
       ),

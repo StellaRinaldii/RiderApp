@@ -308,6 +308,7 @@ class HomePage extends StatelessWidget {
                 distanceKm: distanceKm,
                 estimatedMinutes: estimatedMinutes,
                 points: deliveryPoints,
+                effortLabel: effortLabel,
               ),
             ),
           );

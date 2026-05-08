@@ -11,6 +11,7 @@ class DeliveryDetailPage extends StatelessWidget {
   final double distanceKm;
   final int estimatedMinutes;
   final int points;
+  final String effortLabel;
 
   DeliveryDetailPage({
     required this.deliveryNumber,
@@ -19,6 +20,7 @@ class DeliveryDetailPage extends StatelessWidget {
     required this.distanceKm,
     required this.estimatedMinutes,
     required this.points,
+    required this.effortLabel,
   });
 
   String getRouteImage(double distanceKm, int deliveryNumber) {
@@ -43,6 +45,16 @@ class DeliveryDetailPage extends StatelessWidget {
 
   return images[deliveryNumber % images.length];
 }
+
+  Color getEffortColor(String effortLabel) {
+    if (effortLabel == 'Low effort') {
+      return kGreen;
+    } else if (effortLabel == 'Moderate effort') {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +100,7 @@ class DeliveryDetailPage extends StatelessWidget {
                   deliveryInfo(Icons.route, 'Distance', '$distanceKm km'),
                   deliveryInfo(Icons.timer, 'Estimated time', '$estimatedMinutes min'),
                   deliveryInfo(Icons.stars, 'Points', '+$points pts'),
+                  deliveryInfo(Icons.fitness_center, 'Effort', effortLabel, valueColor: getEffortColor(effortLabel)),
                 ],
               ),
             ),
@@ -148,7 +161,7 @@ class DeliveryDetailPage extends StatelessWidget {
     );
   }
 
-  Widget deliveryInfo(IconData icon, String title, String value) {
+  Widget deliveryInfo(IconData icon, String title, String value, {Color valueColor = Colors.black}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -163,6 +176,7 @@ class DeliveryDetailPage extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
+              style: TextStyle(color: valueColor),
             ),
           ),
         ],
