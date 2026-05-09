@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.stars, color: kGreen),
+                const Icon(Icons.emoji_events, color: kGreen),
                 const SizedBox(width: 5),
                 Text(
                   "$points pt",
@@ -175,6 +175,7 @@ class _HomePageState extends State<HomePage> {
                 distanceKm: 12.0,
                 estimatedMinutes: 45,
                 deliveryPoints: 120,
+                deliveryEarning: 11,
                 effortLabel: "High effort",
               ),
 
@@ -186,6 +187,7 @@ class _HomePageState extends State<HomePage> {
                 distanceKm: 1.3,
                 estimatedMinutes: 5,
                 deliveryPoints: 40,
+                deliveryEarning: 2.50,
                 effortLabel: "Low effort",
               ),
 
@@ -197,6 +199,7 @@ class _HomePageState extends State<HomePage> {
                 distanceKm: 5.0,
                 estimatedMinutes: 15,
                 deliveryPoints: 80,
+                deliveryEarning: 4.50,
                 effortLabel: "Moderate effort",
               ),
 
@@ -322,6 +325,7 @@ class _HomePageState extends State<HomePage> {
     required double distanceKm,
     required int estimatedMinutes,
     required int deliveryPoints,
+    required double deliveryEarning,
     required String effortLabel,
   }) {
     return Card(
@@ -350,7 +354,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Text("Distance: $distanceKm km"),
               Text("Estimated time: $estimatedMinutes min"),
-              Text("Points: +$deliveryPoints pts"),
+              Text("Earning: $deliveryEarning €"),
               RichText(
                 text: TextSpan(
                   style: const TextStyle(
@@ -378,9 +382,30 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: kGreen,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.emoji_events,
+              color: kGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              "$deliveryPoints pts",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: kGreen,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: kGreen,
+              size: 18,
+            ),
+          ],
         ),
         onTap: () {
           Navigator.push(
@@ -393,6 +418,7 @@ class _HomePageState extends State<HomePage> {
                 distanceKm: distanceKm,
                 estimatedMinutes: estimatedMinutes,
                 points: deliveryPoints,
+                deliveryEarning: deliveryEarning,
               ),
             ),
           );
