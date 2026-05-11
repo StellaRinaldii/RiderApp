@@ -160,7 +160,7 @@ class HomePage extends StatelessWidget {
                 deliveryNumber: 3,
                 deadline: "19:15",
                 destinationAddress: "Via Venezia 10, Padova",
-                distanceKm: 5.0,
+                distanceKm: 4.9,
                 estimatedMinutes: 15,
                 deliveryPoints: 80,
                 effortLabel: "Moderate effort",

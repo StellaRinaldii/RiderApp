@@ -67,7 +67,8 @@ class DeliveryDetailPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.only(
+          left: 20, right: 20, top: 30, bottom: 10),
         child: Column(
           children: [
             Text(
