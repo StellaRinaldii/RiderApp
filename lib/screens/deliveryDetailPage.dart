@@ -10,6 +10,7 @@ class DeliveryDetailPage extends StatelessWidget {
   final String destinationAddress;
   final double distanceKm;
   final int estimatedMinutes;
+  final double deliveryEarning;
   final int points;
   final String effortLabel;
 
@@ -19,6 +20,7 @@ class DeliveryDetailPage extends StatelessWidget {
     required this.destinationAddress,
     required this.distanceKm,
     required this.estimatedMinutes,
+    required this.deliveryEarning,
     required this.points,
     required this.effortLabel,
   });

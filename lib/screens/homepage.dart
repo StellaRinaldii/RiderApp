@@ -8,11 +8,45 @@ import 'package:workers_campe/screens/Aftershift.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final int points = 1250;
-  final double effort = 0.8;
+  final double battery = 0.75;
+
+  bool shiftStarted = false;
+  double earnings = 0.0;
+
+  void startShift() {
+    setState(() {
+      shiftStarted = true;
+      earnings = 0.0;
+    });
+
+    //ScaffoldMessenger.of(context).showSnackBar(
+      //const SnackBar(
+        //content: Text("Shift started"),
+        //backgroundColor: kGreen,
+      //),
+    //);
+  }
+
+  void stopShift() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => Aftershiftpage()),
+    );
+
+    setState(() {
+      shiftStarted = false;
+      earnings = 0.0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +74,7 @@ class HomePage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.stars, color: kGreen),
+                const Icon(Icons.emoji_events, color: kGreen),
                 const SizedBox(width: 5),
                 Text(
                   "$points pt",
@@ -73,7 +107,7 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Current effort",
+                        "Energy level",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -92,14 +126,14 @@ class HomePage extends StatelessWidget {
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
-                          widthFactor: effort.clamp(0.0, 1.0),
+                          widthFactor: battery.clamp(0.0, 1.0),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: effort < 0.4
-                                  ? kGreen
-                                  : effort < 0.7
-                                      ? Colors.orange
-                                      : Colors.red,
+                              color: battery < 0.21
+                                  ? Colors.red
+                                  : battery < 0.7
+                                      ? Colors.yellow
+                                      : Colors.green,
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
@@ -109,7 +143,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 10),
 
                       Text(
-                        "${(effort * 100).round()}% - ${effort < 0.4 ? "Low effort" : effort < 0.7 ? "Moderate effort" : "High effort"}",
+                        "${(battery * 100).round()}% - ${battery < 0.2 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
@@ -141,6 +175,7 @@ class HomePage extends StatelessWidget {
                 distanceKm: 12.0,
                 estimatedMinutes: 45,
                 deliveryPoints: 120,
+                deliveryEarning: 11,
                 effortLabel: "High effort",
               ),
 
@@ -152,6 +187,7 @@ class HomePage extends StatelessWidget {
                 distanceKm: 1.3,
                 estimatedMinutes: 5,
                 deliveryPoints: 40,
+                deliveryEarning: 2.50,
                 effortLabel: "Low effort",
               ),
 
@@ -163,55 +199,83 @@ class HomePage extends StatelessWidget {
                 distanceKm: 4.9,
                 estimatedMinutes: 15,
                 deliveryPoints: 80,
+                deliveryEarning: 4.50,
                 effortLabel: "Moderate effort",
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
+              if (shiftStarted == true)
+                Center(
+                  child: Card(
+                    color: Colors.white,
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Current earnings",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: kGreen,
+                            ),
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          Text(
+                            "€${earnings.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              if (shiftStarted == true)
+                const SizedBox(height: 12),
+
+              Center(
+                child: SizedBox(
+                  width: 250,
+                  height: 55,
+                  child: ElevatedButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Activity started")),
-                      );
+                      if (shiftStarted == false) {
+                        startShift();
+                      } else {
+                        stopShift();
+                      }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
+                      backgroundColor: shiftStarted ? Colors.red : kGreen,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 15,
-                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
                     ),
-                    child: const Text("Start"),
-                  ),
-
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => Aftershiftpage()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                    child: Text(
+                      shiftStarted ? "Stop shift" : "Start shift",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text("Stop"),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -227,9 +291,10 @@ class HomePage extends StatelessWidget {
           if (index == 2) {
             _toLoginPage(context);
           }
-          if (index==1) {
+
+          if (index == 1) {
             Navigator.push(
-              context, 
+              context,
               MaterialPageRoute(builder: (_) => Profilepage()),
             );
           }
@@ -260,6 +325,7 @@ class HomePage extends StatelessWidget {
     required double distanceKm,
     required int estimatedMinutes,
     required int deliveryPoints,
+    required double deliveryEarning,
     required String effortLabel,
   }) {
     return Card(
@@ -288,14 +354,58 @@ class HomePage extends StatelessWidget {
             children: [
               Text("Distance: $distanceKm km"),
               Text("Estimated time: $estimatedMinutes min"),
-              Text("Points: +$deliveryPoints pts"),
-              Text("Effort: $effortLabel"),
+              Text("Earning: $deliveryEarning €"),
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                  ),
+                  children: [
+                    const TextSpan(
+                      text: "Effort: ",
+                    ),
+                    TextSpan(
+                      text: effortLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: effortLabel == "High effort"
+                            ? Colors.red
+                            : effortLabel == "Low effort"
+                                ? Colors.green
+                                : Colors.yellow.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: kGreen,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.emoji_events,
+              color: kGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              "$deliveryPoints pts",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: kGreen,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: kGreen,
+              size: 18,
+            ),
+          ],
         ),
         onTap: () {
           Navigator.push(
@@ -308,6 +418,7 @@ class HomePage extends StatelessWidget {
                 distanceKm: distanceKm,
                 estimatedMinutes: estimatedMinutes,
                 points: deliveryPoints,
+                deliveryEarning: deliveryEarning,
                 effortLabel: effortLabel,
               ),
             ),
