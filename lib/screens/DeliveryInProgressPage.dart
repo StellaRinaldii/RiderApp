@@ -5,6 +5,8 @@ const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
 class DeliveryInProgressPage extends StatelessWidget {
+  const DeliveryInProgressPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

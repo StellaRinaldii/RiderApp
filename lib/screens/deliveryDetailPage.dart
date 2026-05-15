@@ -14,7 +14,7 @@ class DeliveryDetailPage extends StatelessWidget {
   final int points;
   final String effortLabel;
 
-  DeliveryDetailPage({
+  const DeliveryDetailPage({super.key, 
     required this.deliveryNumber,
     required this.deadline,
     required this.destinationAddress,
