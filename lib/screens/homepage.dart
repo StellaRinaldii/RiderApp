@@ -8,6 +8,12 @@ import 'package:workers_campe/screens/Aftershift.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
+// Function to get the Shared Preferences values:
+Future <String?> getSP(String key) async{
+  final sp = await SharedPreferences.getInstance();
+  return sp.getString(key);
+}
+
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -23,12 +29,13 @@ class HomePage extends StatelessWidget {
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          "Let's Ride Kashar",
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 25,
-          ),
+        title: Column(
+          children: [ FutureBuilder(
+                            future: getSP('name'), 
+                            builder: (context, snapshot){
+                              final name = snapshot.data ?? '';
+                              return Text("Let's Ride $name!",style: TextStyle(fontWeight: FontWeight.w500,fontSize: 25,),);
+                            }),]
         ),
         actions: [
           Container(

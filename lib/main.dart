@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workers_campe/screens/login.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
+const Color kGreen = Color(0xFF639922);
+
 void main() {
   runApp(MyApp());
 } //main
@@ -13,6 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+
       home: FutureBuilder(
         future: SharedPreferences.getInstance(),
         builder: (context, snapshot) {
