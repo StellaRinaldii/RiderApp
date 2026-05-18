@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/HomePage.dart';
+import 'package:workers_campe/screens/aftershift.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
 class DeliveryInProgressPage extends StatelessWidget {
+  const DeliveryInProgressPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +94,103 @@ class DeliveryInProgressPage extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            Spacer(),
+
+            Center(
+              child: SizedBox(
+                width: 190,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  onPressed: () {
+                    final pageContext = context;
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          backgroundColor: kGreenLight,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          title: Text(
+                            'Emergency call',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                          content: Text(
+                            'Do you want to call 118 and report an emergency?',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.4,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          actionsAlignment: MainAxisAlignment.center,
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                  content: Text('Emergency request sent. Calling 118...'),
+                                ),
+                                );
+                                Future.delayed(const Duration(seconds: 3), () {Navigator.pushReplacement(
+                                  pageContext,MaterialPageRoute(builder: (_) => Aftershiftpage()),
+                                  );
+                                  });
+                                  },
+                              child: Text('Call 118'),
+                          
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Text(
+                    'Emergency',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ),
 
