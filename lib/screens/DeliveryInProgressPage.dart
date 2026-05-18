@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/HomePage.dart';
+import 'package:workers_campe/screens/aftershift.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
@@ -111,6 +112,7 @@ class DeliveryInProgressPage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
+                    final pageContext = context;
                     showDialog(
                       context: context,
                       builder: (context) {
@@ -159,22 +161,20 @@ class DeliveryInProgressPage extends StatelessWidget {
                                 ),
                               ),
                               onPressed: () {
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context)
-                                  ..removeCurrentSnackBar()
-                                  ..showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: Colors.red,
-                                      behavior: SnackBarBehavior.floating,
-                                      margin: EdgeInsets.all(8),
-                                      duration: Duration(seconds: 3),
-                                      content: Text(
-                                        'Emergency request sent. Calling 118...',
-                                      ),
-                                    ),
+                                Navigator.of(context).pop();
+                                
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                  content: Text('Emergency request sent. Calling 118...'),
+                                ),
+                                );
+                                Future.delayed(const Duration(seconds: 3), () {Navigator.pushReplacement(
+                                  pageContext,MaterialPageRoute(builder: (_) => Aftershiftpage()),
                                   );
-                              },
+                                  });
+                                  },
                               child: Text('Call 118'),
                           
                             ),
