@@ -14,7 +14,7 @@ class DeliveryDetailPage extends StatelessWidget {
   final int points;
   final String effortLabel;
 
-  DeliveryDetailPage({
+  const DeliveryDetailPage({super.key,
     required this.deliveryNumber,
     required this.deadline,
     required this.destinationAddress,
@@ -26,27 +26,27 @@ class DeliveryDetailPage extends StatelessWidget {
   });
 
   String getRouteImage(double distanceKm, int deliveryNumber) {
-  List<String> images;
+    List<String> images;
 
-  if (distanceKm <= 2.0) {
-    images = [
-      'assets/routes/short/route_1.png',
-      'assets/routes/short/route_2.png',
-    ];
-  } else if (distanceKm <= 5.0) {
-    images = [
-      'assets/routes/medium/route_1.png',
-      'assets/routes/medium/route_2.png',
-    ];
-  } else {
-    images = [
-      'assets/routes/long/route_1.png',
-      'assets/routes/long/route_2.png',
-    ];
+    if (distanceKm <= 2.0) {
+      images = [
+        'assets/routes/short/route_1.png',
+        'assets/routes/short/route_2.png',
+      ];
+    } else if (distanceKm <= 5.0) {
+      images = [
+        'assets/routes/medium/route_1.png',
+        'assets/routes/medium/route_2.png',
+      ];
+    } else {
+      images = [
+        'assets/routes/long/route_1.png',
+        'assets/routes/long/route_2.png',
+      ];
+    }
+
+    return images[deliveryNumber % images.length];
   }
-
-  return images[deliveryNumber % images.length];
-}
 
   Color getEffortColor(String effortLabel) {
     if (effortLabel == 'Low effort') {
@@ -70,9 +70,10 @@ class DeliveryDetailPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.only(
-          left: 20, right: 20, top: 30, bottom: 10),
+            left: 20, right: 20, top: 30, bottom: 24),
         child: Column(
           children: [
+
             Text(
               'Deliver by $deadline',
               style: TextStyle(
@@ -86,8 +87,12 @@ class DeliveryDetailPage extends StatelessWidget {
 
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: Image.asset(routeImage,height: 180, width: double.infinity,fit: BoxFit.cover,),
+              child: Image.asset(
+                routeImage,
+                width: double.infinity,
+                fit: BoxFit.contain,
               ),
+            ),
 
             SizedBox(height: 24),
 
@@ -102,13 +107,14 @@ class DeliveryDetailPage extends StatelessWidget {
                   deliveryInfo(Icons.place, 'Destination', destinationAddress),
                   deliveryInfo(Icons.route, 'Distance', '$distanceKm km'),
                   deliveryInfo(Icons.timer, 'Estimated time', '$estimatedMinutes min'),
-                  deliveryInfo(Icons.stars, 'Points', '+$points pts'),
+                  deliveryInfo(Icons.attach_money, 'Earning', '\$$deliveryEarning'),
                   deliveryInfo(Icons.fitness_center, 'Effort', effortLabel, valueColor: getEffortColor(effortLabel)),
+                  deliveryInfo(Icons.stars, 'Points', '+$points pts'),
                 ],
               ),
             ),
-
-            Spacer(),
+            
+            Spacer(),                                     
 
             Text(
               'Accept the delivery?',
@@ -158,6 +164,7 @@ class DeliveryDetailPage extends StatelessWidget {
                 ),
               ],
             ),
+
           ],
         ),
       ),
