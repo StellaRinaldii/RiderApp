@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/RegisterPage.dart';
+import 'package:workers_campe/screens/onboarding.dart';
+import 'package:workers_campe/services/impact.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -10,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
@@ -18,17 +20,25 @@ class MyApp extends StatelessWidget {
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController userController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController userController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final Impact impact = Impact();
+
+  @override
+  void dispose() {
+    userController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   InputDecoration inputStyle(String label, String hint, IconData icon) {
     return InputDecoration(
@@ -51,6 +61,63 @@ class _LoginPageState extends State<LoginPage> {
       hintText: hint,
       prefixIcon: Icon(icon, color: kGreen),
     );
+  }
+
+  Future<void> _login() async {
+    final username = userController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Please enter username and password'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      return;
+    }
+
+    final result = await impact.getAndStoreTokens(username, password);
+
+    if (!mounted) return;
+
+    if (result == 200) {
+      final sp = await SharedPreferences.getInstance();
+
+      await sp.setString('username', username);
+      await sp.setString('password', password);
+      await sp.setBool('isUserLogged', true);
+
+      final onboardingCompleted =
+          sp.getBool('onboarding_completed') ?? false;
+
+      if (onboardingCompleted == false) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const Onboarding(),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomePage(),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Username or password incorrect'),
+            backgroundColor: Colors.red,
+          ),
+        );
+    }
   }
 
   @override
@@ -94,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: inputStyle(
                     'Username',
-                    'Enter valid email id',
+                    'Enter your username',
                     Icons.email_outlined,
                   ),
                 ),
@@ -126,46 +193,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
-                      onPressed: () async {
-                        final sharedPreferences = await SharedPreferences.getInstance();
-
-                        final savedEmail = sharedPreferences.getString('userEmail');
-                        final savedPassword = sharedPreferences.getString('userPassword');
-
-                        if (savedEmail == null || savedPassword == null) {
-                          ScaffoldMessenger.of(context).removeCurrentSnackBar();
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('No account found. Please register first.'),
-                              backgroundColor: Colors.orange,
-                            ),
-                          );
-
-                          return;
-                        }
-
-                        if (userController.text == savedEmail &&
-                            passwordController.text == savedPassword) {
-                          await sharedPreferences.setBool('isUserLogged', true);
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => HomePage()),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).removeCurrentSnackBar();
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Wrong email or password'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-
-                    
+                      onPressed: _login,
                       child: const Text(
                         'Login',
                         style: TextStyle(
@@ -186,7 +214,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => RegisterPage()),
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterPage(),
+                          ),
                         );
                       },
                       style: TextButton.styleFrom(
