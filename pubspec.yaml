@@ -13,6 +13,7 @@ dependencies:
   http: null
   intl: null
   jwt_decoder: ^2.0.1
+  provider: 
   
 
 dev_dependencies:

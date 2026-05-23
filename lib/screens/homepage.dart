@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:workers_campe/screens/login.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workers_campe/screens/DeliveryDetailPage.dart';
-import 'package:workers_campe/screens/Profilepage.dart';
-import 'package:workers_campe/screens/Aftershift.dart';
+import 'package:workers_campe/models/possible_shift.dart';
+import 'package:workers_campe/providers/possible_shift_provider.dart';
+import 'package:workers_campe/screens/aftershift.dart';
+import 'package:workers_campe/screens/deliveryDetailPage.dart';
+import 'package:workers_campe/screens/login.dart';
+import 'package:workers_campe/screens/profilepage.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-// Function to get the Shared Preferences values:
 Future<String?> getSP(String key) async {
   final sp = await SharedPreferences.getInstance();
   return sp.getString(key);
@@ -22,13 +24,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final int points = 1250;
   final double battery = 0.75;
-
-  int _selectedIndex = 0;
-
   bool shiftStarted = false;
   double earnings = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<PossibleShiftProvider>();
+      if (!provider.hasLoadedOnce && provider.possibleShifts.isEmpty) {
+        provider.loadPossibleShifts(reset: true);
+      }
+    });
+  }
 
   void startShift() {
     setState(() {
@@ -40,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   void stopShift() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => Aftershiftpage()),
+      MaterialPageRoute(builder: (_) => const Aftershiftpage()),
     );
 
     setState(() {
@@ -49,203 +58,104 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _onNavBarTap(int index) {
-    if (index == 0) {
-      setState(() {
-        _selectedIndex = 0;
-      });
-    } else if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const Profilepage(),
-        ),
-      );
-    } else if (index == 2) {
-      _toLoginPage(context);
-    }
+  void _openDelivery(PossibleShift shift) {
+    context.read<PossibleShiftProvider>().selectPossibleShift(shift);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DeliveryDetailPage(possibleShift: shift),
+      ),
+    );
   }
-
-  final List<BottomNavigationBarItem> navBarItems = const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home),
-      label: "Home",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: "User",
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.logout),
-      label: "Logout",
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kGreenLight,
-
       appBar: AppBar(
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
         title: FutureBuilder(
           future: getSP('name'),
-          builder: (context, snapshot) {
-            final name = snapshot.data ?? '';
-
-            return Text(
-              "Let's Ride $name!",
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 25,
-              ),
-            );
-          },
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 20),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.emoji_events, color: kGreen),
-                const SizedBox(width: 5),
-                Text(
-                  "$points pt",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: kGreen,
-                  ),
-                ),
-              ],
+          builder: (context, snapshot) => Text(
+            "Let's Ride ${snapshot.data ?? ''}!",
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 25,
             ),
           ),
-        ],
+        ),
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                color: Colors.white,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Energy level",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: kGreen,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Container(
-                        height: 18,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: battery.clamp(0.0, 1.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: battery < 0.21
-                                  ? Colors.red
-                                  : battery < 0.7
-                                      ? Colors.yellow
-                                      : Colors.green,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      Text(
-                        "${(battery * 100).round()}% - ${battery < 0.2 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
+              _energyCard(),
               const SizedBox(height: 30),
 
-              const Text(
-                "Proposed deliveries",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: kGreen,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Proposed deliveries',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: kGreen,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => context
+                        .read<PossibleShiftProvider>()
+                        .loadPossibleShifts(),
+                    icon: const Icon(Icons.refresh, color: kGreen),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),
 
-              deliveryCard(
-                context: context,
-                deliveryNumber: 1,
-                deadline: "18:30",
-                destinationAddress: "Via Roma 25, Padova",
-                distanceKm: 12.0,
-                estimatedMinutes: 45,
-                deliveryPoints: 120,
-                deliveryEarning: 11,
-                effortLabel: "High effort",
-              ),
+              Consumer<PossibleShiftProvider>(
+                builder: (context, provider, _) {
+                  if (provider.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CircularProgressIndicator(color: kGreen),
+                      ),
+                    );
+                  }
 
-              deliveryCard(
-                context: context,
-                deliveryNumber: 2,
-                deadline: "17:45",
-                destinationAddress: "Piazza Garibaldi 8, Padova",
-                distanceKm: 1.3,
-                estimatedMinutes: 5,
-                deliveryPoints: 40,
-                deliveryEarning: 2.50,
-                effortLabel: "Low effort",
-              ),
+                  if (provider.errorMessage != null) {
+                    return _messageCard(
+                      provider.errorMessage!,
+                      Icons.info_outline,
+                    );
+                  }
 
-              deliveryCard(
-                context: context,
-                deliveryNumber: 3,
-                deadline: "19:15",
-                destinationAddress: "Via Venezia 10, Padova",
-                distanceKm: 4.9,
-                estimatedMinutes: 15,
-                deliveryPoints: 80,
-                deliveryEarning: 4.50,
-                effortLabel: "Moderate effort",
+                  if (provider.possibleShifts.isEmpty) {
+                    return _messageCard(
+                      'No proposed delivery available.',
+                      Icons.hourglass_empty,
+                    );
+                  }
+
+                  return Column(
+                    children: provider.possibleShifts
+                        .map((shift) => _deliveryCard(context, shift))
+                        .toList(),
+                  );
+                },
               ),
 
               const SizedBox(height: 10),
 
-              if (shiftStarted == true)
+              if (shiftStarted)
                 Center(
                   child: Card(
                     color: Colors.white,
@@ -261,22 +171,19 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         children: [
                           const Text(
-                            "Current earnings",
+                            'Current earnings',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: kGreen,
                             ),
                           ),
-
                           const SizedBox(height: 4),
-
                           Text(
-                            "€${earnings.toStringAsFixed(2)}",
+                            '€${earnings.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
                             ),
                           ),
                         ],
@@ -285,20 +192,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-              if (shiftStarted == true) const SizedBox(height: 12),
+              if (shiftStarted) const SizedBox(height: 12),
 
               Center(
                 child: SizedBox(
                   width: 250,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (shiftStarted == false) {
-                        startShift();
-                      } else {
-                        stopShift();
-                      }
-                    },
+                    onPressed: () => shiftStarted ? stopShift() : startShift(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: shiftStarted ? Colors.red : kGreen,
                       foregroundColor: Colors.white,
@@ -307,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     child: Text(
-                      shiftStarted ? "Stop shift" : "Start shift",
+                      shiftStarted ? 'Stop shift' : 'Start shift',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -320,84 +221,121 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-
-      // bottomNavigationBar: BottomNavigationBar(
-        // currentIndex: 0,
-        // selectedItemColor: kGreen,
-        // unselectedItemColor: Colors.grey,
-        // backgroundColor: Colors.white,
-        // onTap: (index) {
-        //   if (index == 2) {
-        //     _toLoginPage(context);
-        //   }
-
-        //   if (index == 1) {
-        //     Navigator.push(
-        //       context,
-        //       MaterialPageRoute(builder: (_) => Profilepage()),
-        //     );
-        //   }
-        // },
-        // items: const [
-        //   BottomNavigationBarItem(
-        //     icon: Icon(Icons.home),
-        //     label: "Home",
-        //   ),
-        //   BottomNavigationBarItem(
-        //     icon: Icon(Icons.person),
-        //     label: "User",
-        //   ),
-        //   BottomNavigationBarItem(
-        //     icon: Icon(Icons.logout),
-        //     label: "Logout",
-        //   ),
-        // ],
-    //   ),
-    bottomNavigationBar: BottomAppBar(
-      color: Colors.white,
-      child : Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children : [
-          IconButton(
-            icon: const Icon(Icons.home, color: kGreen),
-            onPressed: () {
-              // Already on HomePage, do nothing
-            },
-          ),
-
-          IconButton(
-            icon: const Icon(Icons.person, color: kGreen),
-            onPressed: () {
-              Navigator.pushReplacement(
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.home, color: kGreen),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: const Icon(Icons.person, color: kGreen),
+              onPressed: () => Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => Profilepage()),
-              );
-            },
-          ),
-
-          IconButton(
-            icon: const Icon(Icons.logout, color: kGreen),
-            onPressed: () {
-              _toLoginPage(context);
-            },
-          ),
-        ]
+                MaterialPageRoute(builder: (_) => const Profilepage()),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout, color: kGreen),
+              onPressed: () => _logout(context),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
-  Widget deliveryCard({
-    required BuildContext context,
-    required int deliveryNumber,
-    required String deadline,
-    required String destinationAddress,
-    required double distanceKm,
-    required int estimatedMinutes,
-    required int deliveryPoints,
-    required double deliveryEarning,
-    required String effortLabel,
-  }) {
+  Widget _energyCard() {
+    return Card(
+      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Energy level',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: kGreen,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: 18,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: battery.clamp(0.0, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: battery < 0.21
+                        ? Colors.red
+                        : battery < 0.7
+                            ? Colors.yellow
+                            : Colors.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '${(battery * 100).round()}% - ${battery < 0.2 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _messageCard(String msg, IconData icon) {
+    return Card(
+      color: Colors.white,
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(icon, color: kGreen),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                msg,
+                style: const TextStyle(fontSize: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _deliveryCard(BuildContext context, PossibleShift shift) {
+    final effortColor = shift.effortType == EffortType.high
+        ? Colors.red
+        : shift.effortType == EffortType.low
+            ? Colors.green
+            : Colors.orange;
+
     return Card(
       color: Colors.white,
       elevation: 5,
@@ -412,19 +350,17 @@ class _HomePageState extends State<HomePage> {
           size: 32,
         ),
         title: Text(
-          "Delivery #$deliveryNumber",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          '${shift.activityName} - ${shift.date}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Distance: $distanceKm km"),
-              Text("Estimated time: $estimatedMinutes min"),
-              Text("Earning: $deliveryEarning €"),
+              Text('Distance: ${shift.distanceKm} km'),
+              Text('Estimated time: ${shift.estimatedMinutes} min'),
+              Text('Earning: €${shift.earning.toStringAsFixed(2)}'),
               RichText(
                 text: TextSpan(
                   style: const TextStyle(
@@ -432,18 +368,12 @@ class _HomePageState extends State<HomePage> {
                     fontSize: 14,
                   ),
                   children: [
-                    const TextSpan(
-                      text: "Effort: ",
-                    ),
+                    const TextSpan(text: 'Effort: '),
                     TextSpan(
-                      text: effortLabel,
+                      text: shift.effortLabel,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: effortLabel == "High effort"
-                            ? Colors.red
-                            : effortLabel == "Low effort"
-                                ? Colors.green
-                                : Colors.yellow.shade700,
+                        color: effortColor,
                       ),
                     ),
                   ],
@@ -462,7 +392,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(width: 4),
             Text(
-              "$deliveryPoints pts",
+              '${shift.points} pts',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
@@ -477,36 +407,17 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DeliveryDetailPage(
-                deliveryNumber: deliveryNumber,
-                deadline: deadline,
-                destinationAddress: destinationAddress,
-                distanceKm: distanceKm,
-                estimatedMinutes: estimatedMinutes,
-                points: deliveryPoints,
-                deliveryEarning: deliveryEarning,
-                effortLabel: effortLabel,
-              ),
-            ),
-          );
-        },
+        onTap: () => _openDelivery(shift),
       ),
     );
   }
 
-  static void _toLoginPage(BuildContext context) async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-
-    await sharedPreferences.remove('isUserLogged');
+  static void _logout(BuildContext context) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('isUserLogged');
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 }

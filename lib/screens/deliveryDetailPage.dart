@@ -1,187 +1,189 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:workers_campe/models/possible_shift.dart';
+import 'package:workers_campe/providers/activity_provider.dart';
+import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-class DeliveryDetailPage extends StatelessWidget {
-  final int deliveryNumber;
-  final String deadline;
-  final String destinationAddress;
-  final double distanceKm;
-  final int estimatedMinutes;
-  final double deliveryEarning;
-  final int points;
-  final String effortLabel;
+class DeliveryDetailPage extends StatefulWidget {
+  final PossibleShift possibleShift;
 
-  const DeliveryDetailPage({super.key,
-    required this.deliveryNumber,
-    required this.deadline,
-    required this.destinationAddress,
-    required this.distanceKm,
-    required this.estimatedMinutes,
-    required this.deliveryEarning,
-    required this.points,
-    required this.effortLabel,
-  });
+  const DeliveryDetailPage({super.key, required this.possibleShift});
 
-  String getRouteImage(double distanceKm, int deliveryNumber) {
-    List<String> images;
+  @override
+  State<DeliveryDetailPage> createState() => _DeliveryDetailPageState();
+}
 
-    if (distanceKm <= 2.0) {
-      images = [
-        'assets/routes/short/route_1.png',
-        'assets/routes/short/route_2.png',
-      ];
-    } else if (distanceKm <= 5.0) {
-      images = [
-        'assets/routes/medium/route_1.png',
-        'assets/routes/medium/route_2.png',
-      ];
-    } else {
-      images = [
-        'assets/routes/long/route_1.png',
-        'assets/routes/long/route_2.png',
-      ];
+class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
+  String get _routeImage {
+    if (widget.possibleShift.distanceKm <= 2.0) {
+      return 'assets/routes/short/route_1.png';
     }
-
-    return images[deliveryNumber % images.length];
+    if (widget.possibleShift.distanceKm <= 5.0) {
+      return 'assets/routes/medium/route_1.png';
+    }
+    return 'assets/routes/long/route_1.png';
   }
 
-  Color getEffortColor(String effortLabel) {
-    if (effortLabel == 'Low effort') {
-      return kGreen;
-    } else if (effortLabel == 'Moderate effort') {
-      return Colors.orange;
-    } else {
-      return Colors.red;
+  Color get _effortColor {
+    switch (widget.possibleShift.effortType) {
+      case EffortType.low:
+        return Colors.green;
+      case EffortType.moderate:
+        return Colors.orange;
+      case EffortType.high:
+        return Colors.red;
     }
+  }
+
+  Future<void> _onYes() async {
+    context.read<PossibleShiftProvider>().selectPossibleShift(widget.possibleShift);
+
+    final actProv = context.read<ActivityProvider>();
+    final ok = await actProv.loadActivityDetails(
+      day: widget.possibleShift.date,
+      logId: widget.possibleShift.logId,
+    );
+
+    if (!mounted) return;
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(actProv.errorMessage ?? 'Failed to load activity.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DeliveryInProgressPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final routeImage = getRouteImage(distanceKm, deliveryNumber);
+    final shift = widget.possibleShift;
+
     return Scaffold(
       backgroundColor: kGreenLight,
       appBar: AppBar(
-        title: Text('Delivery #$deliveryNumber'),
+        title: Text('Delivery #${shift.logId}'),
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.only(
-            left: 20, right: 20, top: 30, bottom: 24),
+          left: 20,
+          right: 20,
+          top: 30,
+          bottom: 24,
+        ),
         child: Column(
           children: [
-
             Text(
-              'Deliver by $deadline',
-              style: TextStyle(
+              'Deliver by ${shift.time}',
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: kGreen,
               ),
             ),
-
-            SizedBox(height: 20),
-
+            const SizedBox(height: 20),
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: Image.asset(
-                routeImage,
+                _routeImage,
                 width: double.infinity,
                 fit: BoxFit.contain,
               ),
             ),
-
-            SizedBox(height: 24),
-
+            const SizedBox(height: 24),
             Container(
-              padding: EdgeInsets.all(18),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
                 children: [
-                  deliveryInfo(Icons.place, 'Destination', destinationAddress),
-                  deliveryInfo(Icons.route, 'Distance', '$distanceKm km'),
-                  deliveryInfo(Icons.timer, 'Estimated time', '$estimatedMinutes min'),
-                  deliveryInfo(Icons.attach_money, 'Earning', '\$$deliveryEarning'),
-                  deliveryInfo(Icons.fitness_center, 'Effort', effortLabel, valueColor: getEffortColor(effortLabel)),
-                  deliveryInfo(Icons.stars, 'Points', '+$points pts'),
+                  _row(Icons.place, 'Destination', shift.destinationAddress),
+                  _row(Icons.calendar_month, 'Activity date', shift.date),
+                  _row(Icons.route, 'Distance', '${shift.distanceKm} km'),
+                  _row(Icons.timer, 'Estimated time', '${shift.estimatedMinutes} min'),
+                  _row(Icons.attach_money, 'Earning', '€${shift.earning.toStringAsFixed(2)}'),
+                  _row(Icons.fitness_center, 'Effort', shift.effortLabel, valueColor: _effortColor),
+                  _row(Icons.stars, 'Points', '+${shift.points} pts'),
                 ],
               ),
             ),
-            
-            Spacer(),                                     
-
-            Text(
+            const Spacer(),
+            const Text(
               'Accept the delivery?',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 18),
+            Consumer<ActivityProvider>(
+              builder: (context, actProv, _) {
+                if (actProv.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: kGreen),
+                  );
+                }
 
-            SizedBox(height: 18),
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: kGreen,
-                      side: BorderSide(color: kGreen),
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('NO'),
-                  ),
-                ),
-
-                SizedBox(width: 15),
-
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DeliveryInProgressPage(),
+                return Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: kGreen,
+                          side: const BorderSide(color: kGreen),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                      );
-                    },
-                    child: Text('YES'),
-                  ),
-                ),
-              ],
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('NO'),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: _onYes,
+                        child: const Text('YES'),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-
           ],
         ),
       ),
     );
   }
 
-  Widget deliveryInfo(IconData icon, String title, String value, {Color valueColor = Colors.black}) {
+  Widget _row(
+    IconData icon,
+    String title,
+    String value, {
+    Color valueColor = Colors.black,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Icon(icon, color: kGreen),
-          SizedBox(width: 12),
-          Text(
-            '$title: ',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          const SizedBox(width: 12),
+          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
           Expanded(
             child: Text(
               value,
