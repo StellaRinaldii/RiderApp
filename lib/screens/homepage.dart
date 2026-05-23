@@ -289,39 +289,70 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: kGreen,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        onTap: (index) {
-          if (index == 2) {
-            _toLoginPage(context);
-          }
+      // bottomNavigationBar: BottomNavigationBar(
+        // currentIndex: 0,
+        // selectedItemColor: kGreen,
+        // unselectedItemColor: Colors.grey,
+        // backgroundColor: Colors.white,
+        // onTap: (index) {
+        //   if (index == 2) {
+        //     _toLoginPage(context);
+        //   }
 
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => Profilepage()),
-            );
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
+        //   if (index == 1) {
+        //     Navigator.push(
+        //       context,
+        //       MaterialPageRoute(builder: (_) => Profilepage()),
+        //     );
+        //   }
+        // },
+        // items: const [
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.home),
+        //     label: "Home",
+        //   ),
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.person),
+        //     label: "User",
+        //   ),
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.logout),
+        //     label: "Logout",
+        //   ),
+        // ],
+    //   ),
+    bottomNavigationBar: BottomAppBar(
+      color: Colors.white,
+      child : Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children : [
+          IconButton(
+            icon: const Icon(Icons.home, color: kGreen),
+            onPressed: () {
+              // Already on HomePage, do nothing
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "User",
+
+          IconButton(
+            icon: const Icon(Icons.person, color: kGreen),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => Profilepage()),
+              );
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: "Logout",
+
+          IconButton(
+            icon: const Icon(Icons.logout, color: kGreen),
+            onPressed: () {
+              _toLoginPage(context);
+            },
           ),
-        ],
+        ]
       ),
-    );
+    ),
+  );
   }
 
   Widget deliveryCard({

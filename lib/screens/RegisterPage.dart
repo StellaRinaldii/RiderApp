@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:workers_campe/screens/Profilepage.dart';
+import 'package:workers_campe/screens/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const Color kGreen = Color(0xFF639922);
@@ -185,7 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => Profilepage(),
+                                    builder: (_) => HomePage(),
                                   ),
                                   (route) => false,
                                 );

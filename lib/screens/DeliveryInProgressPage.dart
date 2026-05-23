@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/HomePage.dart';
 import 'package:workers_campe/screens/aftershift.dart';
+import 'package:workers_campe/screens/afterdelivery.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
@@ -170,8 +171,8 @@ class DeliveryInProgressPage extends StatelessWidget {
                                   content: Text('Emergency request sent. Calling 118...'),
                                 ),
                                 );
-                                Future.delayed(const Duration(seconds: 3), () {Navigator.pushReplacement(
-                                  pageContext,MaterialPageRoute(builder: (_) => Aftershiftpage()),
+                                Future.delayed(const Duration(seconds: 3), () {
+                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Aftershiftpage()),
                                   );
                                   });
                                   },
@@ -210,7 +211,7 @@ class DeliveryInProgressPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => HomePage()),
+                    MaterialPageRoute(builder: (_) => Afterdelivery()),
                     (route) => false,
                   );
                 },

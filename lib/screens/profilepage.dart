@@ -384,41 +384,82 @@ class _ProfilePageState extends State<Profilepage> {
               )
 
           ],),
-        
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 1,
-          selectedItemColor: kGreen,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          onTap: (index) {
-            if (index == 2) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              )
-            ;
-            } else if (index == 0){
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => HomePage()),
+
+   bottomNavigationBar: BottomAppBar(
+      color: Colors.white,
+      child : Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children : [
+          IconButton(
+            icon: const Icon(Icons.home, color: kGreen),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => HomePage()),
+                (route) => false,
               );
-            } 
-          },
-          items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "User",
+
+          IconButton(
+            icon: const Icon(Icons.person, color: kGreen),
+            onPressed: () {
+              // Already on ProfilePage, do nothing
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: "Logout",
+
+          IconButton(
+            icon: const Icon(Icons.logout, color: kGreen),
+            onPressed: () {
+              _toLoginPage(context);
+            },
           ),
-        ],
-        ),
+        ]
+      ),
+    ),
+        
+        // bottomNavigationBar: BottomNavigationBar(
+        //   currentIndex: 1,
+        //   selectedItemColor: kGreen,
+        //   unselectedItemColor: Colors.grey,
+        //   backgroundColor: Colors.white,
+        //   onTap: (index) {
+        //     if (index == 2) {
+        //       Navigator.of(context).pushReplacement(
+        //         MaterialPageRoute(builder: (context) => LoginPage()),
+        //       )
+        //     ;
+        //     } else if (index == 0){
+        //       Navigator.of(context).pushReplacement(
+        //         MaterialPageRoute(builder: (context) => HomePage()),
+        //       );
+        //     } 
+        //   },
+        //   items: const [
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.home),
+        //     label: "Home",
+        //   ),
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.person),
+        //     label: "User",
+        //   ),
+        //   BottomNavigationBarItem(
+        //     icon: Icon(Icons.logout),
+        //     label: "Logout",
+        //   ),
+        // ],
+        // ),
     );
   }
   
+    static void _toLoginPage(BuildContext context) async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+    await sharedPreferences.remove('isUserLogged');
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
 }
 
