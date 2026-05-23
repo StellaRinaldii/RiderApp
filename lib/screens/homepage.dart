@@ -9,7 +9,7 @@ const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
 // Function to get the Shared Preferences values:
-Future <String?> getSP(String key) async{
+Future<String?> getSP(String key) async {
   final sp = await SharedPreferences.getInstance();
   return sp.getString(key);
 }
@@ -25,6 +25,8 @@ class _HomePageState extends State<HomePage> {
   final int points = 1250;
   final double battery = 0.75;
 
+  int _selectedIndex = 0;
+
   bool shiftStarted = false;
   double earnings = 0.0;
 
@@ -33,13 +35,6 @@ class _HomePageState extends State<HomePage> {
       shiftStarted = true;
       earnings = 0.0;
     });
-
-    //ScaffoldMessenger.of(context).showSnackBar(
-      //const SnackBar(
-        //content: Text("Shift started"),
-        //backgroundColor: kGreen,
-      //),
-    //);
   }
 
   void stopShift() async {
@@ -54,6 +49,38 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _onNavBarTap(int index) {
+    if (index == 0) {
+      setState(() {
+        _selectedIndex = 0;
+      });
+    } else if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const Profilepage(),
+        ),
+      );
+    } else if (index == 2) {
+      _toLoginPage(context);
+    }
+  }
+
+  final List<BottomNavigationBarItem> navBarItems = const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: "Home",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: "User",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.logout),
+      label: "Logout",
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,13 +90,19 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Column(
-          children: [ FutureBuilder(
-                            future: getSP('name'), 
-                            builder: (context, snapshot){
-                              final name = snapshot.data ?? '';
-                              return Text("Let's Ride $name!",style: TextStyle(fontWeight: FontWeight.w500,fontSize: 25,),);
-                            }),]
+        title: FutureBuilder(
+          future: getSP('name'),
+          builder: (context, snapshot) {
+            final name = snapshot.data ?? '';
+
+            return Text(
+              "Let's Ride $name!",
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 25,
+              ),
+            );
+          },
         ),
         actions: [
           Container(
@@ -252,8 +285,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-              if (shiftStarted == true)
-                const SizedBox(height: 12),
+              if (shiftStarted == true) const SizedBox(height: 12),
 
               Center(
                 child: SizedBox(
@@ -468,10 +500,13 @@ class _HomePageState extends State<HomePage> {
 
   static void _toLoginPage(BuildContext context) async {
     final sharedPreferences = await SharedPreferences.getInstance();
+
     await sharedPreferences.remove('isUserLogged');
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
     );
   }
 }
