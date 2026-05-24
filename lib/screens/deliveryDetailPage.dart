@@ -8,57 +8,28 @@ import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-class DeliveryDetailPage extends StatefulWidget {
+class DeliveryDetailPage extends StatelessWidget {
   final PossibleShift possibleShift;
 
   const DeliveryDetailPage({super.key, required this.possibleShift});
 
-  @override
-  State<DeliveryDetailPage> createState() => _DeliveryDetailPageState();
-}
-
-class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
   String get _routeImage {
-    if (widget.possibleShift.distanceKm <= 2.0) {
-      return 'assets/routes/short/route_1.png';
-    }
-    if (widget.possibleShift.distanceKm <= 5.0) {
-      return 'assets/routes/medium/route_1.png';
-    }
+    if (possibleShift.distanceKm <= 2.0) return 'assets/routes/short/route_1.png';
+    if (possibleShift.distanceKm <= 5.0) return 'assets/routes/medium/route_1.png';
     return 'assets/routes/long/route_1.png';
   }
 
   Color get _effortColor {
-    switch (widget.possibleShift.effortType) {
-      case EffortType.low:
-        return Colors.green;
-      case EffortType.moderate:
-        return Colors.orange;
-      case EffortType.high:
-        return Colors.red;
+    switch (possibleShift.effortType) {
+      case EffortType.low: return Colors.green;
+      case EffortType.moderate: return Colors.orange;
+      case EffortType.high: return Colors.red;
     }
   }
 
-  Future<void> _onYes() async {
-    context.read<PossibleShiftProvider>().selectPossibleShift(widget.possibleShift);
-
-    final actProv = context.read<ActivityProvider>();
-    final ok = await actProv.loadActivityDetails(
-      day: widget.possibleShift.date,
-      logId: widget.possibleShift.logId,
-    );
-
-    if (!mounted) return;
-
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(actProv.errorMessage ?? 'Failed to load activity.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+  void _onYes(BuildContext context) {
+    context.read<PossibleShiftProvider>().selectPossibleShift(possibleShift);
+    context.read<ActivityProvider>().setActivityFromShift(possibleShift);
 
     Navigator.push(
       context,
@@ -66,54 +37,44 @@ class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
     );
   }
 
+  void _onNo(BuildContext context) {
+    context.read<PossibleShiftProvider>().rejectShift(possibleShift);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final shift = widget.possibleShift;
+    final shift = possibleShift;
 
     return Scaffold(
       backgroundColor: kGreenLight,
       appBar: AppBar(
-        title: Text('Delivery #${shift.logId}'),
+        title: const Text('Delivery details'),
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 30,
-          bottom: 24,
-        ),
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 30, bottom: 24),
         child: Column(
           children: [
             Text(
               'Deliver by ${shift.time}',
               style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: kGreen,
-              ),
+                fontSize: 18, fontWeight: FontWeight.bold, color: kGreen),
             ),
             const SizedBox(height: 20),
             ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                _routeImage,
-                width: double.infinity,
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset(_routeImage, width: double.infinity, fit: BoxFit.contain),
             ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
+                color: Colors.white, borderRadius: BorderRadius.circular(24)),
               child: Column(
                 children: [
                   _row(Icons.place, 'Destination', shift.destinationAddress),
-                  _row(Icons.calendar_month, 'Activity date', shift.date),
                   _row(Icons.route, 'Distance', '${shift.distanceKm} km'),
                   _row(Icons.timer, 'Estimated time', '${shift.estimatedMinutes} min'),
                   _row(Icons.attach_money, 'Earning', '€${shift.earning.toStringAsFixed(2)}'),
@@ -123,47 +84,35 @@ class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
               ),
             ),
             const Spacer(),
-            const Text(
-              'Accept the delivery?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text('Accept the delivery?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 18),
-            Consumer<ActivityProvider>(
-              builder: (context, actProv, _) {
-                if (actProv.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: kGreen),
-                  );
-                }
-
-                return Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: kGreen,
-                          side: const BorderSide(color: kGreen),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('NO'),
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: kGreen,
+                      side: const BorderSide(color: kGreen),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kGreen,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: _onYes,
-                        child: const Text('YES'),
-                      ),
+                    onPressed: () => _onNo(context),
+                    child: const Text('NO'),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                  ],
-                );
-              },
+                    onPressed: () => _onYes(context),
+                    child: const Text('YES'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -171,12 +120,7 @@ class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
     );
   }
 
-  Widget _row(
-    IconData icon,
-    String title,
-    String value, {
-    Color valueColor = Colors.black,
-  }) {
+  Widget _row(IconData icon, String title, String value, {Color valueColor = Colors.black}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -185,11 +129,7 @@ class _DeliveryDetailPageState extends State<DeliveryDetailPage> {
           const SizedBox(width: 12),
           Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(color: valueColor),
-            ),
+            child: Text(value, textAlign: TextAlign.right, style: TextStyle(color: valueColor)),
           ),
         ],
       ),

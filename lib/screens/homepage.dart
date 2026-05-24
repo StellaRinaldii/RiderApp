@@ -16,55 +16,36 @@ Future<String?> getSP(String key) async {
   return sp.getString(key);
 }
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final double battery = 0.75;
-  bool shiftStarted = false;
-  double earnings = 0.0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<PossibleShiftProvider>();
-      if (!provider.hasLoadedOnce && provider.possibleShifts.isEmpty) {
-        provider.loadPossibleShifts(reset: true);
-      }
-    });
+  void _startShift(BuildContext context) {
+    context.read<PossibleShiftProvider>().startShift();
   }
 
-  void startShift() {
-    setState(() {
-      shiftStarted = true;
-      earnings = 0.0;
-    });
-  }
-
-  void stopShift() async {
-    await Navigator.push(
+  void _stopShift(BuildContext context) {
+    context.read<PossibleShiftProvider>().finishShift();
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const Aftershiftpage()),
     );
-
-    setState(() {
-      shiftStarted = false;
-      earnings = 0.0;
-    });
   }
 
-  void _openDelivery(PossibleShift shift) {
+  void _openDelivery(BuildContext context, PossibleShift shift) {
     context.read<PossibleShiftProvider>().selectPossibleShift(shift);
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => DeliveryDetailPage(possibleShift: shift),
       ),
+    );
+  }
+
+  static void _logout(BuildContext context) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('isUserLogged');
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 
@@ -87,139 +68,109 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _energyCard(),
-              const SizedBox(height: 30),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Consumer<PossibleShiftProvider>(
+        builder: (context, provider, _) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Expanded(
-                    child: Text(
-                      'Proposed deliveries',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: kGreen,
-                      ),
+                  _energyCard(),
+                  const SizedBox(height: 30),
+
+                  const Text(
+                    'Proposed deliveries',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: kGreen,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => context
-                        .read<PossibleShiftProvider>()
-                        .loadPossibleShifts(),
-                    icon: const Icon(Icons.refresh, color: kGreen),
+
+                  const SizedBox(height: 12),
+
+                  _deliveriesSection(context, provider),
+
+                  const SizedBox(height: 10),
+
+                  if (provider.shiftStarted)
+                    Center(
+                      child: Card(
+                        color: Colors.white,
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'Current earnings',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: kGreen,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '€${provider.totalEarnings.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  if (provider.shiftStarted) const SizedBox(height: 12),
+
+                  Center(
+                    child: SizedBox(
+                      width: 250,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: provider.shiftStarted
+                            ? () => _stopShift(context)
+                            : () => _startShift(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              provider.shiftStarted ? Colors.red : kGreen,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: Text(
+                          provider.shiftStarted ? 'Stop shift' : 'Start shift',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 12),
-
-              Consumer<PossibleShiftProvider>(
-                builder: (context, provider, _) {
-                  if (provider.isLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: CircularProgressIndicator(color: kGreen),
-                      ),
-                    );
-                  }
-
-                  if (provider.errorMessage != null) {
-                    return _messageCard(
-                      provider.errorMessage!,
-                      Icons.info_outline,
-                    );
-                  }
-
-                  if (provider.possibleShifts.isEmpty) {
-                    return _messageCard(
-                      'No proposed delivery available.',
-                      Icons.hourglass_empty,
-                    );
-                  }
-
-                  return Column(
-                    children: provider.possibleShifts
-                        .map((shift) => _deliveryCard(context, shift))
-                        .toList(),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              if (shiftStarted)
-                Center(
-                  child: Card(
-                    color: Colors.white,
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Current earnings',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: kGreen,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '€${earnings.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-              if (shiftStarted) const SizedBox(height: 12),
-
-              Center(
-                child: SizedBox(
-                  width: 250,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () => shiftStarted ? stopShift() : startShift(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: shiftStarted ? Colors.red : kGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: Text(
-                      shiftStarted ? 'Stop shift' : 'Start shift',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
@@ -247,7 +198,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _deliveriesSection(BuildContext context, PossibleShiftProvider provider) {
+    if (!provider.shiftStarted) {
+      return _messageCard(
+        'Press Start shift to show available deliveries',
+        Icons.directions_bike_rounded,
+      );
+    }
+
+    if (provider.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(color: kGreen),
+        ),
+      );
+    }
+
+    if (provider.errorMessage != null) {
+      return _messageCard(provider.errorMessage!, Icons.info_outline);
+    }
+
+    if (provider.possibleShifts.isEmpty) {
+      return _messageCard(
+        'No proposed delivery available.',
+        Icons.hourglass_empty,
+      );
+    }
+
+    return Column(
+      children: [
+        for (int i = 0; i < provider.possibleShifts.length; i++)
+        _deliveryCard(context, provider.possibleShifts[i], i + 1),
+        ],
+      );
+  }
+
   Widget _energyCard() {
+    const double battery = 0.75;
+
     return Card(
       color: Colors.white,
       elevation: 4,
@@ -329,7 +318,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _deliveryCard(BuildContext context, PossibleShift shift) {
+  Widget _deliveryCard(BuildContext context, PossibleShift shift,int index) {
     final effortColor = shift.effortType == EffortType.high
         ? Colors.red
         : shift.effortType == EffortType.low
@@ -350,7 +339,7 @@ class _HomePageState extends State<HomePage> {
           size: 32,
         ),
         title: Text(
-          '${shift.activityName} - ${shift.date}',
+          'Activity $index', 
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Padding(
@@ -385,11 +374,7 @@ class _HomePageState extends State<HomePage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.emoji_events,
-              color: kGreen,
-              size: 20,
-            ),
+            const Icon(Icons.emoji_events, color: kGreen, size: 20),
             const SizedBox(width: 4),
             Text(
               '${shift.points} pts',
@@ -400,24 +385,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: kGreen,
-              size: 18,
-            ),
+            const Icon(Icons.arrow_forward_ios, color: kGreen, size: 18),
           ],
         ),
-        onTap: () => _openDelivery(shift),
+        onTap: () => _openDelivery(context, shift),
       ),
-    );
-  }
-
-  static void _logout(BuildContext context) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.remove('isUserLogged');
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workers_campe/screens/homepage.dart';
-import 'package:workers_campe/screens/RegisterPage.dart';
 import 'package:workers_campe/screens/onboarding.dart';
-import 'package:workers_campe/services/impact.dart';
+import 'package:workers_campe/services/Impact.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -90,22 +89,17 @@ class _LoginPageState extends State<LoginPage> {
       await sp.setString('password', password);
       await sp.setBool('isUserLogged', true);
 
-      final onboardingCompleted =
-          sp.getBool('onboarding_completed') ?? false;
+      final onboardingCompleted = sp.getBool('onboarding_completed') ?? false;
 
       if (onboardingCompleted == false) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const Onboarding(),
-          ),
+          MaterialPageRoute(builder: (_) => const Onboarding()),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const HomePage(),
-          ),
+          MaterialPageRoute(builder: (_) => const HomePage()),
         );
       }
     } else {
@@ -205,29 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 10),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterPage(),
-                          ),
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: kGreen,
-                      ),
-                      child: const Text('Not yet registered?'),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 250),
+                const SizedBox(height: 260),
 
                 const Align(
                   alignment: Alignment.bottomCenter,

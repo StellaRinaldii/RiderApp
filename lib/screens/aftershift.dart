@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
 const Color kGreen = Color(0xFF639922);
@@ -18,7 +20,6 @@ class Aftershiftpage extends StatefulWidget {
 }
 
 class _AftershiftpageState extends State<Aftershiftpage> {
-  // Track whether the rider answered each end-of-shift question
   bool _injuryAnswered = false;
   bool _fatigueAnswered = false;
 
@@ -51,6 +52,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
 
   void _onReturn() {
     if (_injuryAnswered && _fatigueAnswered) {
+      context.read<PossibleShiftProvider>().resetShiftSummary();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomePage()),
@@ -69,6 +71,8 @@ class _AftershiftpageState extends State<Aftershiftpage> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PossibleShiftProvider>();
+
     return Scaffold(
       backgroundColor: kGreenLight,
       body: SafeArea(
@@ -76,26 +80,65 @@ class _AftershiftpageState extends State<Aftershiftpage> {
           margin: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const Text('SHIFT ENDED!',
-                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: kGreen)),
+              const Text(
+                'SHIFT ENDED!',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: kGreen,
+                ),
+              ),
+
+              if (provider.shiftClosedByEmergency) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: const Text(
+                    'Shift closed after emergency request',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
 
               const Spacer(),
 
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(24)),
-                child: Column(children: [
-                  Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    child: Image.asset('assets/consegna.png'),
-                  ),
-                  const SizedBox(height: 5),
-                  _filledShift(Icons.local_activity, 'Total n° of activities', '5'),
-                  _filledShift(Icons.monetization_on, 'Earnings', '100'),
-                  _filledShift(Icons.attach_money, 'Bonuses', '8'),
-                  _filledShift(Icons.money, 'Total income', '108'),
-                ]),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Image.asset('assets/consegna.png'),
+                    ),
+                    const SizedBox(height: 5),
+                    _row(Icons.local_activity, 'Deliveries completed',
+                        provider.completedDeliveries.toString()),
+                    _row(Icons.monetization_on, 'Earnings',
+                        '€${provider.totalEarnings.toStringAsFixed(2)}'),
+                    _row(Icons.stars, 'Points', provider.totalPoints.toString()),
+                    _row(Icons.route, 'Distance',
+                        '${provider.totalDistanceKm.toStringAsFixed(2)} km'),
+                    _row(Icons.timer, 'Total time',
+                        '${provider.totalDurationMinutes} min'),
+                    _row(Icons.local_fire_department, 'Calories',
+                        '${provider.totalCalories.round()} kcal'),
+                  ],
+                ),
               ),
 
               const Spacer(),
@@ -103,67 +146,77 @@ class _AftershiftpageState extends State<Aftershiftpage> {
               Card(
                 color: Colors.white,
                 margin: const EdgeInsets.only(bottom: 12),
-                child: Column(children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 10),
-                      const Text('Were you completely free of injuries?',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _onInjuryYes,
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: _injuryAnswered ? Colors.green.shade200 : Colors.green,
-                                foregroundColor: Colors.white),
-                            child: const Icon(Icons.check),
-                          ),
-                          const SizedBox(width: 30),
-                          ElevatedButton(
-                            onPressed: _onInjuryNo,
-                            style: ElevatedButton.styleFrom(
+                child: Column(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Were you completely free of injuries?',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: _onInjuryYes,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _injuryAnswered
+                                    ? Colors.green.shade200
+                                    : Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Icon(Icons.check),
+                            ),
+                            const SizedBox(width: 30),
+                            ElevatedButton(
+                              onPressed: _onInjuryNo,
+                              style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
-                                foregroundColor: Colors.deepOrangeAccent),
-                            child: const Icon(Icons.cancel),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Text('How would you rate your level of fatigue?',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton(
-                            onPressed: () => _onFatigue(4),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: const Icon(Icons.sentiment_dissatisfied),
-                          ),
-                          TextButton(
-                            onPressed: () => _onFatigue(3),
-                            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-                            child: const Icon(Icons.sentiment_neutral),
-                          ),
-                          TextButton(
-                            onPressed: () => _onFatigue(2),
-                            style: TextButton.styleFrom(foregroundColor: Colors.amber),
-                            child: const Icon(Icons.sentiment_satisfied),
-                          ),
-                          TextButton(
-                            onPressed: () => _onFatigue(1),
-                            style: TextButton.styleFrom(foregroundColor: Colors.green),
-                            child: const Icon(Icons.sentiment_very_satisfied),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ]),
+                                foregroundColor: Colors.deepOrangeAccent,
+                              ),
+                              child: const Icon(Icons.cancel),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'How would you rate your level of fatigue?',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () => _onFatigue(4),
+                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              child: const Icon(Icons.sentiment_dissatisfied),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(3),
+                              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                              child: const Icon(Icons.sentiment_neutral),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(2),
+                              style: TextButton.styleFrom(foregroundColor: Colors.amber),
+                              child: const Icon(Icons.sentiment_satisfied),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(1),
+                              style: TextButton.styleFrom(foregroundColor: Colors.green),
+                              child: const Icon(Icons.sentiment_very_satisfied),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               SizedBox(
@@ -173,12 +226,16 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kGreen,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                   ),
                   onPressed: _onReturn,
                   icon: const Icon(Icons.home),
-                  label: const Text('Return to Homepage',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Return to Homepage',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -188,15 +245,17 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     );
   }
 
-  Widget _filledShift(IconData icon, String title, String value) {
+  Widget _row(IconData icon, String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(children: [
-        Icon(icon, color: kGreen),
-        const SizedBox(width: 12),
-        Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-        Expanded(child: Text(value, textAlign: TextAlign.right)),
-      ]),
+      child: Row(
+        children: [
+          Icon(icon, color: kGreen),
+          const SizedBox(width: 12),
+          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value, textAlign: TextAlign.right)),
+        ],
+      ),
     );
   }
 }

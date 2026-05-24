@@ -15,7 +15,8 @@ class Afterdelivery extends StatelessWidget {
     final actProv = context.watch<ActivityProvider>();
     final shiftProv = context.watch<PossibleShiftProvider>();
     final activity = actProv.selectedActivity;
-    final shift = shiftProv.currentPossibleShift;
+    // lastCompletedShift holds the shift that was just completed
+    final completedShift = shiftProv.lastCompletedShift;
     const double battery = 0.75;
 
     return Scaffold(
@@ -89,9 +90,11 @@ class Afterdelivery extends StatelessWidget {
                               const Divider(),
                               _info(Icons.directions_bike, 'Activity', activity.activityName),
                               _info(Icons.calendar_month, 'Date', activity.date),
-                              _info(Icons.fitness_center, 'Effort', shift?.effortLabel ?? '-'),
-                              _info(Icons.stars, 'Points Earned', shift != null ? '${shift.points}' : '-'),
-                              _info(Icons.attach_money, 'Money Earned', shift != null ? '€${shift.earning.toStringAsFixed(2)}' : '-'),
+                              _info(Icons.fitness_center, 'Effort', completedShift?.effortLabel ?? '-'),
+                              _info(Icons.stars, 'Points Earned',
+                                  completedShift != null ? '+${completedShift.points} pts' : '-'),
+                              _info(Icons.attach_money, 'Money Earned',
+                                  completedShift != null ? '€${completedShift.earning.toStringAsFixed(2)}' : '-'),
                             ],
                           ),
                   ),
@@ -192,11 +195,15 @@ class Afterdelivery extends StatelessWidget {
                         borderRadius: BorderRadius.circular(18),
                       ),
                     ),
-                    onPressed: () => Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomePage()),
-                      (route) => false,
-                    ),
+                    onPressed: () {
+                      // Clear only the activity details; shift stays active
+                      context.read<ActivityProvider>().clearSelectedActivity();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HomePage()),
+                        (route) => false,
+                      );
+                    },
                     icon: const Icon(Icons.home),
                     label: const Text(
                       'Return to Homepage',
@@ -240,10 +247,7 @@ class Afterdelivery extends StatelessWidget {
           const SizedBox(width: 12),
           Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-            ),
+            child: Text(value, textAlign: TextAlign.right),
           ),
         ],
       ),

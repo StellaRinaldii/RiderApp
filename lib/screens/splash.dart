@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/login.dart';
-import 'package:workers_campe/services/impact.dart';
+import 'package:workers_campe/services/Impact.dart';
 
 class Splash extends StatelessWidget {
   const Splash({Key? key}) : super(key: key);
@@ -24,26 +24,18 @@ class Splash extends StatelessWidget {
     );
   }
 
-  // Method for navigation SplashPage -> HomePage
   void _toHomePage(BuildContext context) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const HomePage(),
-      ),
+      MaterialPageRoute(builder: (context) => const HomePage()),
     );
   }
 
-  // Method for navigation SplashPage -> LoginPage
   void _toLoginPage(BuildContext context) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
-  // Method for checking if the user has still valid tokens
-  // If yes, navigate to HomePage, if not, navigate to LoginPage
   void _checkLogin(BuildContext context) async {
     final result = await Impact().refreshTokens();
 
