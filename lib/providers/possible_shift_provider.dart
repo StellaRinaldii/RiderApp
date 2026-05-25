@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/exercise_activity.dart';
 import '../models/possible_shift.dart';
 import '../services/Impact.dart';
@@ -110,7 +110,6 @@ class PossibleShiftProvider extends ChangeNotifier {
         checked++;
 
         final raw = await Impact.fetchExerciseDataByDateRange(
-          username: Impact.patientUsername,
           startDate: _fmt(start),
           endDate: _fmt(end),
         );
@@ -130,9 +129,9 @@ class PossibleShiftProvider extends ChangeNotifier {
             if (item is! Map) continue;
             final activity = ExerciseActivity.fromJson(
               Map<String, dynamic>.from(item), date);
-            if (_isBici(activity) && activity.distanceKm > 0.01) {
-              possibleShifts.add(_buildShift(activity, possibleShifts.length));
-              if (possibleShifts.length == _maxProposals) break;
+           if (_isBici(activity) && activity.distanceKm > 0.01) {
+             possibleShifts.add(_buildShift(activity, possibleShifts.length));
+             if (possibleShifts.length == _maxProposals) break;
             }
           }
           if (possibleShifts.length == _maxProposals) break;
@@ -184,7 +183,6 @@ class PossibleShiftProvider extends ChangeNotifier {
       logId: activity.logId,
       date: activity.date,
       activityName: activity.activityName,
-      time: times[index % times.length],
       distanceKm: km,
       estimatedMinutes: activity.durationMinutes > 0 ? activity.durationMinutes : 30,
       points: points,
@@ -192,6 +190,7 @@ class PossibleShiftProvider extends ChangeNotifier {
       effortType: effort,
       effortLabel: _effortLabel(effort),
       destinationAddress: addresses[index % addresses.length],
+      activity: activity,
     );
   }
 
@@ -200,7 +199,7 @@ class PossibleShiftProvider extends ChangeNotifier {
     final km = a.distanceKm;
     final cal = a.calories ?? 0;
     final hr = a.averageHeartRate ?? 0;
-    if (mins > 45 || km > 8 || cal > 400 || hr > 150) return EffortType.high;
+    if (mins > 200 || km > 70|| cal > 2000 || hr > 150) return EffortType.high;
     if (mins < 20 && km < 3 && cal < 200) return EffortType.low;
     return EffortType.moderate;
   }

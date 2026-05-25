@@ -10,8 +10,9 @@ const Color kGreenLight = Color(0xFFEAF3DE);
 
 class DeliveryDetailPage extends StatelessWidget {
   final PossibleShift possibleShift;
+  final int DeliveryIndex;
 
-  const DeliveryDetailPage({super.key, required this.possibleShift});
+  const DeliveryDetailPage({super.key, required this.possibleShift, required this.DeliveryIndex});
 
   String get _routeImage {
     if (possibleShift.distanceKm <= 2.0) return 'assets/routes/short/route_1.png';
@@ -57,8 +58,7 @@ class DeliveryDetailPage extends StatelessWidget {
         padding: const EdgeInsets.only(left: 20, right: 20, top: 30, bottom: 24),
         child: Column(
           children: [
-            Text(
-              'Deliver by ${shift.time}',
+            Text('Delivery #$DeliveryIndex',
               style: const TextStyle(
                 fontSize: 18, fontWeight: FontWeight.bold, color: kGreen),
             ),

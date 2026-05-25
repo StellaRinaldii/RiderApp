@@ -36,7 +36,7 @@ class HomePage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DeliveryDetailPage(possibleShift: shift),
+        builder: (_) => DeliveryDetailPage(possibleShift: shift,DeliveryIndex: context.read<PossibleShiftProvider>().possibleShifts.indexOf(shift) + 1),
       ),
     );
   }
@@ -339,7 +339,7 @@ class HomePage extends StatelessWidget {
           size: 32,
         ),
         title: Text(
-          'Activity $index', 
+          'Delivery #$index', 
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Padding(

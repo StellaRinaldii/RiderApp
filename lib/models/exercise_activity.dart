@@ -4,8 +4,8 @@ class ExerciseActivity {
   final String activityName;
   final String date;
   final String time;
-  final double? duration;       // milliseconds from IMPACT
-  final double? activeDuration; // milliseconds from IMPACT
+  final double? duration;       
+  final double? activeDuration; 
   final double? distance;
   final String? distanceUnit;
   final double? calories;

@@ -88,8 +88,6 @@ class Afterdelivery extends StatelessWidget {
                                 ],
                               ),
                               const Divider(),
-                              _info(Icons.directions_bike, 'Activity', activity.activityName),
-                              _info(Icons.calendar_month, 'Date', activity.date),
                               _info(Icons.fitness_center, 'Effort', completedShift?.effortLabel ?? '-'),
                               _info(Icons.stars, 'Points Earned',
                                   completedShift != null ? '+${completedShift.points} pts' : '-'),

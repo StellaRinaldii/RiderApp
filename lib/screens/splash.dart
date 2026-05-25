@@ -37,7 +37,7 @@ class Splash extends StatelessWidget {
   }
 
   void _checkLogin(BuildContext context) async {
-    final result = await Impact().refreshTokens();
+    final result = await Impact.refreshTokens();
 
     if (result == 200) {
       _toHomePage(context);

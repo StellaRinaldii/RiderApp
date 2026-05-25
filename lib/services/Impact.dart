@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,129 +10,129 @@ class Impact {
   static const String refreshEndpoint = 'gate/v1/refresh/';
   static const String exerciseEndpoint = 'data/v1/exercise/patients/';
 
-  static String patientUsername = 'Jpefaq6m58'; // username is the same for every group!
+  static String patientUsername = 'Jpefaq6m58';
 
-  // Get tokens from IMPACT and store them in SharedPreferences
   Future<int> getAndStoreTokens(String username, String password) async {
+    //Create the request
     final url = Impact.baseUrl + Impact.tokenEndpoint;
+    final body = {'username': username, 'password': password};
 
-    final response = await http.post(
-      Uri.parse(url),
-      body: {
-        'username': username,
-        'password': password,
-      },
-    );
+    //Get the response
+    print('Calling: $url');
+    final response = await http.post(Uri.parse(url), body: body);
 
+    //If response is OK, decode it and store the tokens. Otherwise do nothing.
     if (response.statusCode == 200) {
-      final d = jsonDecode(response.body);
+      final decodedResponse = jsonDecode(response.body);
       final sp = await SharedPreferences.getInstance();
+      await sp.setString('access', decodedResponse['access']);
+      await sp.setString('refresh', decodedResponse['refresh']);
+    } //if
 
-      await sp.setString('access', d['access']);
-      await sp.setString('refresh', d['refresh']);
-    }
-
+    //Just return the status code
     return response.statusCode;
-  }
+  } //_getAndStoreTokens
 
-  // Refresh the access token using the refresh token
-  Future<int> refreshTokens() async {
+  //This method allows to refresh the stored JWT in SharedPreferences
+  static Future<int> refreshTokens() async {
+    //Create the request
+    final url = Impact.baseUrl + Impact.refreshEndpoint;
     final sp = await SharedPreferences.getInstance();
     final refresh = sp.getString('refresh');
+    if (refresh != null) {
+      final body = {'refresh': refresh};
 
-    if (refresh == null) return 401;
+      //Get the response
+      print('Calling: $url');
+      final response = await http.post(Uri.parse(url), body: body);
 
-    final url = Impact.baseUrl + Impact.refreshEndpoint;
+      //If the response is OK, set the tokens in SharedPreferences to the new values
+      if (response.statusCode == 200) {
+        final decodedResponse = jsonDecode(response.body);
+        final sp = await SharedPreferences.getInstance();
+        await sp.setString('access', decodedResponse['access']);
+        await sp.setString('refresh', decodedResponse['refresh']);
+      } //if
 
-    final response = await http.post(
-      Uri.parse(url),
-      body: {
-        'refresh': refresh,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final d = jsonDecode(response.body);
-
-      await sp.setString('access', d['access']);
-      await sp.setString('refresh', d['refresh']);
+      //Just return the status code
+      return response.statusCode;
     }
-
-    return response.statusCode;
-  }
-
-  // Build auth headers from stored access token
-  static Future<Map<String, String>> _headers() async {
-    final sp = await SharedPreferences.getInstance();
-    final access = sp.getString('access') ?? '';
-
-    return {
-      'Authorization': 'Bearer $access',
-    };
-  }
+    return 401;
+  } //_refreshTokens
 
   // Fetch exercise data for a single day
   static Future<dynamic> fetchExerciseDataByDay({
-    required String username,
     required String day,
   }) async {
-    final url = '${Impact.baseUrl}${Impact.exerciseEndpoint}$username/day/$day/';
 
+    //Get the stored access token (Note that this code does not work if the tokens are null)
+    final sp = await SharedPreferences.getInstance();
+    var access = sp.getString('access');
+
+    //If access token is expired, refresh it
+    if(JwtDecoder.isExpired(access!)){
+      await Impact.refreshTokens();
+      access = sp.getString('access');
+    }//if
+
+    //Create the request
+    final url = Impact.baseUrl + Impact.exerciseEndpoint + Impact.patientUsername + '/day/$day/';
+
+    final headers = {HttpHeaders.authorizationHeader: 'Bearer $access'};
+
+    //Get the response
     print('Calling: $url');
-
-    var response = await http.get(
-      Uri.parse(url),
-      headers: await _headers(),
-    );
-
-    if (response.statusCode == 401) {
-      await Impact().refreshTokens();
-
-      response = await http.get(
-        Uri.parse(url),
-        headers: await _headers(),
-      );
-    }
-
+    final response = await http.get(Uri.parse(url), headers: headers);
+    
+    //if OK parse the response, otherwise return null
+    var result = null;
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+      result = jsonDecode(response.body);
+    } //if
 
-    print('fetchExerciseDataByDay error: ${response.statusCode}');
-    return null;
-  }
+    //Return the result
+    return result;
+
+  } //fetchExerciseDataByDay
+  
 
   // Fetch exercise data for a date range.
-  // The API accepts a maximum range of 7 days.
+  // OSS: The API accepts a maximum range of 7 days.
   static Future<dynamic> fetchExerciseDataByDateRange({
-    required String username,
     required String startDate,
     required String endDate,
   }) async {
-    final url = '${Impact.baseUrl}${Impact.exerciseEndpoint}$username'
-        '/daterange/start_date/$startDate/end_date/$endDate/';
 
+    //Get the stored access token (Note that this code does not work if the tokens are null)
+    final sp = await SharedPreferences.getInstance();
+    var access = sp.getString('access');
+
+    //If access token is expired, refresh it
+    if(JwtDecoder.isExpired(access!)){
+      await Impact.refreshTokens();
+      access = sp.getString('access');
+    }//if
+
+    //Create the request
+    final url = Impact.baseUrl + Impact.exerciseEndpoint + Impact.patientUsername
+        + '/daterange/start_date/$startDate/end_date/$endDate/';
+
+    final headers = {HttpHeaders.authorizationHeader: 'Bearer $access'};
+
+    //Get the response
     print('Calling: $url');
-
-    var response = await http.get(
-      Uri.parse(url),
-      headers: await _headers(),
-    );
-
-    if (response.statusCode == 401) {
-      await Impact().refreshTokens();
-
-      response = await http.get(
-        Uri.parse(url),
-        headers: await _headers(),
-      );
-    }
-
+    final response = await http.get(Uri.parse(url), headers: headers);
+    
+    //if OK parse the response, otherwise return null
+    var result = null;
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
+      result = jsonDecode(response.body);
+    } //if
 
-    print('fetchExerciseDataByDateRange error: ${response.statusCode}');
-    return null;
-  }
+    //Return the result
+    print('Received data: $result');
+    return result;
+
+  } //fetchExerciseDataByDateRange
+
 }
