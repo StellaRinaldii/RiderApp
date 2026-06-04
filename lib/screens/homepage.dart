@@ -11,43 +11,8 @@ import 'package:workers_campe/screens/profilepage.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-Future<String?> getSP(String key) async {
-  final sp = await SharedPreferences.getInstance();
-  return sp.getString(key);
-}
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  void _startShift(BuildContext context) {
-    context.read<PossibleShiftProvider>().startShift();
-  }
-
-  void _stopShift(BuildContext context) {
-    context.read<PossibleShiftProvider>().finishShift();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const Aftershiftpage()),
-    );
-  }
-
-  void _openDelivery(BuildContext context, PossibleShift shift) {
-    context.read<PossibleShiftProvider>().selectPossibleShift(shift);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DeliveryDetailPage(possibleShift: shift,DeliveryIndex: context.read<PossibleShiftProvider>().possibleShifts.indexOf(shift) + 1),
-      ),
-    );
-  }
-
-  static void _logout(BuildContext context) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.remove('isUserLogged');
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,140 +22,90 @@ class HomePage extends StatelessWidget {
         backgroundColor: kGreen,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: FutureBuilder(
-          future: getSP('name'),
-          builder: (context, snapshot) => Text(
-            "Let's Ride ${snapshot.data ?? ''}!",
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 25,
-            ),
-          ),
+        title: FutureBuilder<String?>(
+          future: SharedPreferences.getInstance().then((sp) => sp.getString('name')),
+          builder: (_, snap) => Text("Let's Ride ${snap.data ?? ''}!",
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 25)),
         ),
       ),
       body: Consumer<PossibleShiftProvider>(
-        builder: (context, provider, _) {
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _energyCard(),
-                  const SizedBox(height: 30),
-
-                  const Text(
-                    'Proposed deliveries',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: kGreen,
+        builder: (context, provider, _) => SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _energyCard(),
+              const SizedBox(height: 30),
+              const Text('Proposed deliveries',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kGreen)),
+              const SizedBox(height: 12),
+              _deliveriesSection(context, provider),
+              const SizedBox(height: 10),
+              if (provider.shiftStarted)
+                Center(
+                  child: Card(
+                    color: Colors.white,
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      child: Column(children: [
+                        const Text('Current earnings',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kGreen)),
+                        const SizedBox(height: 4),
+                        Text('€${provider.totalEarnings.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        Text('${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                      ]),
                     ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  _deliveriesSection(context, provider),
-
-                  const SizedBox(height: 10),
-
-                  if (provider.shiftStarted)
-                    Center(
-                      child: Card(
-                        color: Colors.white,
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'Current earnings',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: kGreen,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '€${provider.totalEarnings.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                '${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  if (provider.shiftStarted) const SizedBox(height: 12),
-
-                  Center(
-                    child: SizedBox(
-                      width: 250,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: provider.shiftStarted
-                            ? () => _stopShift(context)
-                            : () => _startShift(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              provider.shiftStarted ? Colors.red : kGreen,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          provider.shiftStarted ? 'Stop shift' : 'Start shift',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+              if (provider.shiftStarted) const SizedBox(height: 12),
+              Center(
+                child: SizedBox(
+                  width: 250,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: provider.shiftStarted
+                        ? () {
+                            provider.finishShift();
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const Aftershiftpage()));
+                          }
+                        : () => provider.startShift(),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: provider.shiftStarted ? Colors.red : kGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+                    child: Text(provider.shiftStarted ? 'Stop shift' : 'Start shift',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            IconButton(
-              icon: const Icon(Icons.home, color: kGreen),
-              onPressed: () {},
-            ),
+            IconButton(icon: const Icon(Icons.home, color: kGreen), onPressed: () {}),
             IconButton(
               icon: const Icon(Icons.person, color: kGreen),
               onPressed: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const Profilepage()),
-              ),
+                  context, MaterialPageRoute(builder: (_) => const Profilepage())),
             ),
             IconButton(
               icon: const Icon(Icons.logout, color: kGreen),
-              onPressed: () => _logout(context),
+              onPressed: () async {
+                final sp = await SharedPreferences.getInstance();
+                await sp.remove('isUserLogged');
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const LoginPage()));
+              },
             ),
           ],
         ),
@@ -200,39 +115,26 @@ class HomePage extends StatelessWidget {
 
   Widget _deliveriesSection(BuildContext context, PossibleShiftProvider provider) {
     if (!provider.shiftStarted) {
-      return _messageCard(
-        'Press Start shift to show available deliveries',
-        Icons.directions_bike_rounded,
-      );
+      return _msgCard('Press Start shift to show available deliveries', Icons.directions_bike_rounded);
     }
-
     if (provider.isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(color: kGreen),
-        ),
-      );
+      return const Center(child: Padding(
+          padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: kGreen)));
     }
-
     if (provider.errorMessage != null) {
-      return _messageCard(provider.errorMessage!, Icons.info_outline);
+      return _msgCard(provider.errorMessage!, Icons.info_outline);
     }
-
     if (provider.possibleShifts.isEmpty) {
-      return _messageCard(
-        'No proposed delivery available.',
-        Icons.hourglass_empty,
-      );
+      return _msgCard('No proposed delivery available.', Icons.hourglass_empty);
     }
-
     return Column(
       children: [
         for (int i = 0; i < provider.possibleShifts.length; i++)
-        _deliveryCard(context, provider.possibleShifts[i], i + 1),
-        ],
-      );
+          _deliveryCard(context, provider.possibleShifts[i], i + 1),
+      ],
+    );
   }
+
 
   Widget _energyCard() {
     const double battery = 0.75;
@@ -293,102 +195,66 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _messageCard(String msg, IconData icon) {
-    return Card(
-      color: Colors.white,
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
+  Widget _msgCard(String msg, IconData icon) => Card(
+        color: Colors.white,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(children: [
             Icon(icon, color: kGreen),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                msg,
-                style: const TextStyle(fontSize: 15),
-              ),
-            ),
-          ],
+            Expanded(child: Text(msg, style: const TextStyle(fontSize: 15))),
+          ]),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _deliveryCard(BuildContext context, PossibleShift shift,int index) {
+  Widget _deliveryCard(BuildContext context, PossibleShift shift, int index) {
     final effortColor = shift.effortType == EffortType.high
         ? Colors.red
         : shift.effortType == EffortType.low
             ? Colors.green
             : Colors.orange;
-
     return Card(
       color: Colors.white,
       elevation: 5,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
-        leading: const Icon(
-          Icons.directions_bike_rounded,
-          color: kGreen,
-          size: 32,
-        ),
-        title: Text(
-          'Delivery #$index', 
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        leading: const Icon(Icons.directions_bike_rounded, color: kGreen, size: 32),
+        title: Text('Delivery #$index', style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Distance: ${shift.distanceKm} km'),
-              Text('Estimated time: ${shift.estimatedMinutes} min'),
-              Text('Earning: €${shift.earning.toStringAsFixed(2)}'),
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                  ),
-                  children: [
-                    const TextSpan(text: 'Effort: '),
-                    TextSpan(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Distance: ${shift.activity.distanceKm.toStringAsFixed(2)} km'),
+            Text('Estimated time: ${shift.activity.durationMinutes} min'),
+            Text('Earning: €${shift.earning.toStringAsFixed(2)}'),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                children: [
+                  const TextSpan(text: 'Effort: '),
+                  TextSpan(
                       text: shift.effortLabel,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: effortColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.emoji_events, color: kGreen, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              '${shift.points} pts',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: kGreen,
+                      style: TextStyle(fontWeight: FontWeight.bold, color: effortColor)),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios, color: kGreen, size: 18),
-          ],
+          ]),
         ),
-        onTap: () => _openDelivery(context, shift),
+        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.emoji_events, color: kGreen, size: 20),
+          const SizedBox(width: 4),
+          Text('${shift.points} pts',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: kGreen)),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios, color: kGreen, size: 18),
+        ]),
+        onTap: () {
+          context.read<PossibleShiftProvider>().selectPossibleShift(shift);
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => DeliveryDetailPage(possibleShift: shift, deliveryIndex: index)));
+        },
       ),
     );
   }

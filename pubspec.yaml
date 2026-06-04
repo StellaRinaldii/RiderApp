@@ -14,6 +14,7 @@ dependencies:
   intl: null
   jwt_decoder: ^2.0.1
   provider: 
+  fl_chart: ^1.2.0
   
 
 dev_dependencies:

@@ -1,104 +1,75 @@
-// Model for a single exercise activity returned by IMPACT
+class HeartRateZone {
+  final String name;
+  final int min;
+  final int max;
+  final int minutes;
+  final double caloriesOut;
+
+  HeartRateZone({
+    required this.name,
+    required this.min,
+    required this.max,
+    required this.minutes,
+    required this.caloriesOut,
+  });
+
+  HeartRateZone.fromJson(Map<String, dynamic> json)
+      : name = json['name']?.toString() ?? '',
+        min = (json['min'] as num?)?.toInt() ?? 0,
+        max = (json['max'] as num?)?.toInt() ?? 0,
+        minutes = (json['minutes'] as num?)?.toInt() ?? 0,
+        caloriesOut = (json['caloriesOut'] as num?)?.toDouble() ?? 0.0;
+}
+
 class ExerciseActivity {
-  final String logId;
   final String activityName;
   final String date;
   final String time;
-  final double? duration;       
-  final double? activeDuration; 
+  final double? averageHeartRate;
+  final double? calories;
   final double? distance;
   final String? distanceUnit;
-  final double? calories;
-  final int? steps;
-  final double? averageHeartRate;
+  final double? duration;
+  final double? activeDuration;
+  final List<HeartRateZone> heartRateZones;
   final double? speed;
-  final double? pace;
   final double? elevationGain;
-  final bool hasGps;
-  final bool hasActiveZoneMinutes;
 
   ExerciseActivity({
-    required this.logId,
     required this.activityName,
     required this.date,
     required this.time,
-    this.duration,
-    this.activeDuration,
+    this.averageHeartRate,
+    this.calories,
     this.distance,
     this.distanceUnit,
-    this.calories,
-    this.steps,
-    this.averageHeartRate,
+    this.duration,
+    this.activeDuration,
+    this.heartRateZones = const [],
     this.speed,
-    this.pace,
     this.elevationGain,
-    this.hasGps = false,
-    this.hasActiveZoneMinutes = false,
   });
 
-  static double? _parseDouble(dynamic v) {
-    if (v == null) return null;
-    if (v is double) return v;
-    if (v is int) return v.toDouble();
-    if (v is String) return double.tryParse(v);
-    return null;
-  }
 
-  static int? _parseInt(dynamic v) {
-    if (v == null) return null;
-    if (v is int) return v;
-    if (v is double) return v.toInt();
-    if (v is String) return int.tryParse(v);
-    return null;
-  }
+    ExerciseActivity.fromJson(Map<String, dynamic> json, String date)
+      : activityName = json['activityName']?.toString() ?? '',
+        date = date,
+        time = json['time']?.toString() ?? json['startTime']?.toString() ?? '',
+        averageHeartRate =
+            (json['averageHeartRate'] as num?)?.toDouble(),
+        calories = (json['calories'] as num?)?.toDouble(),
+        distance = (json['distance'] as num?)?.toDouble(),
+        distanceUnit = json['distanceUnit']?.toString(),
+        duration = (json['duration'] as num?)?.toDouble(),
+        activeDuration = (json['activeDuration'] as num?)?.toDouble(),
+        speed = (json['speed'] as num?)?.toDouble(),
+        elevationGain = (json['elevationGain'] as num?)?.toDouble(),
+        heartRateZones = (json['heartRateZones'] as List<dynamic>? ?? [])
+            .map((zone) => HeartRateZone.fromJson(
+                  Map<String, dynamic>.from(zone),
+                ))
+            .toList();
 
-  // IMPACT returns duration and activeDuration in milliseconds.
-  // This also supports HH:MM:SS if a different endpoint returns a time string.
-  static double? _parseDurationMs(dynamic v) {
-    if (v == null) return null;
-    if (v is int) return v.toDouble();
-    if (v is double) return v;
-    if (v is String) {
-      final parts = v.split(':');
-      if (parts.length == 3) {
-        final h = int.tryParse(parts[0]) ?? 0;
-        final m = int.tryParse(parts[1]) ?? 0;
-        final s = int.tryParse(parts[2]) ?? 0;
-        return ((h * 3600 + m * 60 + s) * 1000).toDouble();
-      }
-      return double.tryParse(v);
-    }
-    return null;
-  }
-
-  factory ExerciseActivity.fromJson(Map<String, dynamic> json, String date) {
-    return ExerciseActivity(
-      logId: json['logId']?.toString() ?? '',
-      activityName: json['activityName']?.toString() ?? 'Activity',
-      date: date,
-      time: json['startTime']?.toString() ?? json['time']?.toString() ?? '',
-      duration: _parseDurationMs(json['duration']),
-      activeDuration: _parseDurationMs(json['activeDuration']),
-      distance: _parseDouble(json['distance']),
-      distanceUnit: json['distanceUnit']?.toString(),
-      calories: _parseDouble(json['calories']),
-      steps: _parseInt(json['steps']),
-      averageHeartRate: _parseDouble(json['averageHeartRate']),
-      speed: _parseDouble(json['speed']),
-      pace: _parseDouble(json['pace']),
-      elevationGain: _parseDouble(json['elevationGain']),
-      hasGps: json['hasGps'] == true,
-      hasActiveZoneMinutes: json['hasActiveZoneMinutes'] == true,
-    );
-  }
-
-  // Duration in minutes
-  int get durationMinutes => duration != null ? (duration! / 60000).round() : 0;
-
-  // Active duration in minutes
-  int get activeDurationMinutes => activeDuration != null ? (activeDuration! / 60000).round() : 0;
-
-  // Distance in km
   double get distanceKm {
     if (distance == null) return 0.0;
     final unit = distanceUnit?.toLowerCase() ?? '';
@@ -106,12 +77,6 @@ class ExerciseActivity {
     return distance!;
   }
 
-  // Average speed in km/h, from the API speed field or calculated from duration.
-  double get averageSpeedKmh {
-    if (speed != null && speed! > 0) return speed!;
-    if (duration != null && duration! > 0 && distanceKm > 0) {
-      return distanceKm / (duration! / 3600000.0);
-    }
-    return 0.0;
-  }
+  int get durationMinutes => duration != null ? (duration! / 60000).round() : 0;
+  int get activeDurationMinutes => activeDuration != null ? (activeDuration! / 60000).round() : 0;
 }
