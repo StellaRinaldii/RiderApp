@@ -12,7 +12,8 @@ class Impact {
   static const String exerciseEndpoint = 'data/v1/exercise/patients/';
 
   static String patientUsername = 'Jpefaq6m58';
-
+  
+// This method allows to get the JWT from Impact and store it in SharedPreferences
   Future<int> getAndStoreTokens(String username, String password) async {
     //Create the request
     final url = Impact.baseUrl + Impact.tokenEndpoint;
@@ -61,7 +62,7 @@ class Impact {
     return 401;
   } //_refreshTokens  
 
-  // Fetch exercise data for a date range.
+  // This method fetches exercise data for a date range.
   // OSS: The API accepts a maximum range of 7 days.
   static Future<List<ExerciseActivity>?> fetchExerciseDataByDateRange({
     required String startDate,
@@ -91,6 +92,7 @@ class Impact {
     }
 
     final decodedResponse = jsonDecode(response.body);
+
     final List<ExerciseActivity> activities = [];
 
     final days = decodedResponse is List

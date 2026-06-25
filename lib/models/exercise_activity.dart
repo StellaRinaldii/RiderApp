@@ -19,6 +19,11 @@ class HeartRateZone {
         max = (json['max'] as num?)?.toInt() ?? 0,
         minutes = (json['minutes'] as num?)?.toInt() ?? 0,
         caloriesOut = (json['caloriesOut'] as num?)?.toDouble() ?? 0.0;
+
+   @override
+  String toString() {
+    return 'HeartRateZone(name: $name, min: $min, max: $max, minutes: $minutes, caloriesOut: $caloriesOut)';
+  }
 }
 
 class ExerciseActivity {
@@ -54,7 +59,7 @@ class ExerciseActivity {
     ExerciseActivity.fromJson(Map<String, dynamic> json, String date)
       : activityName = json['activityName']?.toString() ?? '',
         date = date,
-        time = json['time']?.toString() ?? json['startTime']?.toString() ?? '',
+        time = json['time']?.toString() ?? '',
         averageHeartRate =
             (json['averageHeartRate'] as num?)?.toDouble(),
         calories = (json['calories'] as num?)?.toDouble(),
@@ -79,4 +84,11 @@ class ExerciseActivity {
 
   int get durationMinutes => duration != null ? (duration! / 60000).round() : 0;
   int get activeDurationMinutes => activeDuration != null ? (activeDuration! / 60000).round() : 0;
+
+  @override
+  String toString() {
+    return 'ExerciseActivity(activityName: $activityName, date: $date, time: $time, '
+        'averageHeartRate: $averageHeartRate, distance: $distance, '
+        'distanceUnit: $distanceUnit,';
+  }
 }
