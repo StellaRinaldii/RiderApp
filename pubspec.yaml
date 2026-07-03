@@ -15,6 +15,7 @@ dependencies:
   jwt_decoder: ^2.0.1
   provider: 
   fl_chart: ^1.2.0
+  image_picker: ^1.0.8
   
 
 dev_dependencies:

@@ -9,6 +9,7 @@ class PossibleShift {
   final EffortType effortType;
   final String effortLabel;
   final String destinationAddress;
+  //final int estimatedBatteryReduction;
 
   PossibleShift({
     required this.activity,
@@ -17,5 +18,6 @@ class PossibleShift {
     required this.effortType,
     required this.effortLabel,
     required this.destinationAddress,
+    //required this.estimatedBatteryReduction
   });
 }

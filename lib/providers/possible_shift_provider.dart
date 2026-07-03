@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:intl/find_locale.dart';
 import '../models/exercise_activity.dart';
 import '../models/possible_shift.dart';
 import '../services/Impact.dart';
 import 'package:intl/intl.dart';
+import '../utils/battery_algorithm.dart';
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
@@ -23,6 +26,7 @@ class PossibleShiftProvider extends ChangeNotifier {
   int totalDurationMinutes = 0;
   double totalCalories = 0.0;
   bool shiftClosedByEmergency = false;
+  var currentBattery = Battery() ;
 
   int _weekOffset = 0;
 
@@ -114,6 +118,7 @@ class PossibleShiftProvider extends ChangeNotifier {
         }
 
         for (final activity in activities) {
+          // va aggiunta la condizione per le battery reduction
           if (activity.activityName=='Bici' && activity.distanceKm > 0.01) {
             possibleShifts.add(_buildShift(activity, possibleShifts.length));
             if (possibleShifts.length == _maxProposals) break;
@@ -141,6 +146,7 @@ class PossibleShiftProvider extends ChangeNotifier {
     final earning = double.parse(
       (km * 0.50 + bonus / 100).clamp(1.50, 50.0).toStringAsFixed(2),
     );
+    //final estimation = currentBattery.lossEstimation(age, hrex, hrrest, activity.durationMinutes);
     const addresses = [
       'Via Venezia 10, Padova',
       'Via Roma 20, Padova',
@@ -153,6 +159,7 @@ class PossibleShiftProvider extends ChangeNotifier {
       effortType: effort,
       effortLabel: _effortLabel(effort),
       destinationAddress: addresses[index % addresses.length],
+      //estimatedBatteryReduction: estimation,
     );
   }
 
