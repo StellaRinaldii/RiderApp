@@ -8,6 +8,7 @@ void main() {
 }
 
 const Color kGreen = Color(0xFF639922);
+const Color kGreenLight = Color(0xFFEAF3DE);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -18,6 +19,13 @@ class MyApp extends StatelessWidget {
       create: (context) => PossibleShiftProvider(),
       child:  MaterialApp(
         debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+          seedColor: kGreen, 
+          primary:  kGreen,
+          secondary:  kGreenLight,
+        ),
+        ),
         home: Splash(),
       ),
     );
