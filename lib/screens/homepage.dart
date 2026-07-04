@@ -12,29 +12,45 @@ const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final bool applySleepRecoveryAfterShift;
+
+  const HomePage({
+    super.key,
+    this.applySleepRecoveryAfterShift = false,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  // avoids starting more than one 10s timer, even if the Home rebuilds
-  // several times while the recovery is still pending.
-  bool _sleepRecoveryTimerStarted = false;
+  @override
+  void initState() {
+    super.initState();
 
-  // Starts the 10s sleep-recovery countdown exactly once, if the provider
-  // signals that a recovery is pending (i.e. we just came back from the
-  // aftershift screen).
-  void _maybeStartSleepRecoveryTimer(PossibleShiftProvider provider) {
-    if (!provider.sleepRecoveryPending || _sleepRecoveryTimerStarted) return;
-    _sleepRecoveryTimerStarted = true;
+    if (widget.applySleepRecoveryAfterShift) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startSleepRecoveryTimer();
+      });
+    }
+  }
 
+  void _startSleepRecoveryTimer() {
     Future.delayed(const Duration(seconds: 10), () async {
       if (!mounted) return;
+
+      final provider = context.read<PossibleShiftProvider>();
+
+      // Safety check: do not apply sleep recovery if a new shift has started.
+      if (!provider.sleepRecoveryPending || provider.shiftStarted) {
+        print('[SLEEP] Recovery skipped: pending=${provider.sleepRecoveryPending}, shiftStarted=${provider.shiftStarted}');
+        return;
+      }
+
       final message = await provider.applySleepRecoveryAfterShift();
-      _sleepRecoveryTimerStarted = false;
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
         ..showSnackBar(SnackBar(
@@ -61,7 +77,6 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Consumer<PossibleShiftProvider>(
         builder: (context, provider, _) {
-          _maybeStartSleepRecoveryTimer(provider);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -106,12 +121,19 @@ class _HomePageState extends State<HomePage> {
                               Navigator.push(context,
                                   MaterialPageRoute(builder: (_) => const Aftershiftpage()));
                             }
-                          : () => provider.startShift(),
+                          : provider.sleepRecoveryPending
+                              ? null
+                              : () => provider.startShift(),
                       style: ElevatedButton.styleFrom(
                           backgroundColor: provider.shiftStarted ? Colors.red : kGreen,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-                      child: Text(provider.shiftStarted ? 'Stop shift' : 'Start shift',
+                      child: Text(
+                          provider.shiftStarted
+                              ? 'Stop shift'
+                              : provider.sleepRecoveryPending
+                                  ? 'Recovering...'
+                                  : 'Start shift',
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),

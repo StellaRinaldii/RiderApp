@@ -10,9 +10,29 @@ const Color kGreenLight = Color(0xFFEAF3DE);
 class DeliveryInProgressPage extends StatelessWidget {
   const DeliveryInProgressPage({super.key});
 
-Future<void> _completeDelivery(BuildContext context) async {
-    await context.read<PossibleShiftProvider>().completeCurrentDelivery();
+  Future<void> _completeDelivery(BuildContext context) async {
+    final provider = context.read<PossibleShiftProvider>();
+
+    await provider.completeCurrentDelivery();
+
     if (!context.mounted) return;
+
+    if (provider.shiftClosedByLowBattery) {
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+          content: Text('Battery low: it’s time to rest.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Aftershiftpage()),
+      );
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const Afterdelivery()),

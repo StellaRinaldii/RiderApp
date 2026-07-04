@@ -55,7 +55,9 @@ class _AftershiftpageState extends State<Aftershiftpage> {
       context.read<PossibleShiftProvider>().resetShiftSummary();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(
+          builder: (_) => const HomePage(applySleepRecoveryAfterShift: true),
+        ),
         (route) => false,
       );
     } else {
@@ -103,6 +105,26 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+
+              if (provider.shiftClosedByLowBattery) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: const Text(
+                    'Battery low: it’s time to rest.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
