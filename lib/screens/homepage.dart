@@ -11,8 +11,39 @@ import 'package:workers_campe/screens/profilepage.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // avoids starting more than one 10s timer, even if the Home rebuilds
+  // several times while the recovery is still pending.
+  bool _sleepRecoveryTimerStarted = false;
+
+  // Starts the 10s sleep-recovery countdown exactly once, if the provider
+  // signals that a recovery is pending (i.e. we just came back from the
+  // aftershift screen).
+  void _maybeStartSleepRecoveryTimer(PossibleShiftProvider provider) {
+    if (!provider.sleepRecoveryPending || _sleepRecoveryTimerStarted) return;
+    _sleepRecoveryTimerStarted = true;
+
+    Future.delayed(const Duration(seconds: 10), () async {
+      if (!mounted) return;
+      final message = await provider.applySleepRecoveryAfterShift();
+      _sleepRecoveryTimerStarted = false;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(message),
+          backgroundColor: kGreen,
+          duration: const Duration(seconds: 4),
+        ));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,63 +60,66 @@ class HomePage extends StatelessWidget {
         ),
       ),
       body: Consumer<PossibleShiftProvider>(
-        builder: (context, provider, _) => SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _energyCard(),
-              const SizedBox(height: 30),
-              const Text('Proposed deliveries',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kGreen)),
-              const SizedBox(height: 12),
-              _deliveriesSection(context, provider),
-              const SizedBox(height: 10),
-              if (provider.shiftStarted)
+        builder: (context, provider, _) {
+          _maybeStartSleepRecoveryTimer(provider);
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _energyCard(provider),
+                const SizedBox(height: 30),
+                const Text('Proposed deliveries',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kGreen)),
+                const SizedBox(height: 12),
+                _deliveriesSection(context, provider),
+                const SizedBox(height: 10),
+                if (provider.shiftStarted)
+                  Center(
+                    child: Card(
+                      color: Colors.white,
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        child: Column(children: [
+                          const Text('Current earnings',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kGreen)),
+                          const SizedBox(height: 4),
+                          Text('€${provider.totalEarnings.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          Text('${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
+                              style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        ]),
+                      ),
+                    ),
+                  ),
+                if (provider.shiftStarted) const SizedBox(height: 12),
                 Center(
-                  child: Card(
-                    color: Colors.white,
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      child: Column(children: [
-                        const Text('Current earnings',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kGreen)),
-                        const SizedBox(height: 4),
-                        Text('€${provider.totalEarnings.toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                        Text('${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                      ]),
+                  child: SizedBox(
+                    width: 250,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: provider.shiftStarted
+                          ? () {
+                              provider.finishShift();
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (_) => const Aftershiftpage()));
+                            }
+                          : () => provider.startShift(),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: provider.shiftStarted ? Colors.red : kGreen,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+                      child: Text(provider.shiftStarted ? 'Stop shift' : 'Start shift',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),
-              if (provider.shiftStarted) const SizedBox(height: 12),
-              Center(
-                child: SizedBox(
-                  width: 250,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: provider.shiftStarted
-                        ? () {
-                            provider.finishShift();
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const Aftershiftpage()));
-                          }
-                        : () => provider.startShift(),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: provider.shiftStarted ? Colors.red : kGreen,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-                    child: Text(provider.shiftStarted ? 'Stop shift' : 'Start shift',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
       ),
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
@@ -136,8 +170,8 @@ class HomePage extends StatelessWidget {
   }
 
 
-  Widget _energyCard() {
-    const double battery = 0.75;
+  Widget _energyCard(PossibleShiftProvider provider) {
+    final double battery = provider.currentBattery.batteryLevel / 100.0;
 
     return Card(
       color: Colors.white,

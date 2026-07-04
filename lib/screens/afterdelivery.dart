@@ -13,9 +13,14 @@ class Afterdelivery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shift = context.watch<PossibleShiftProvider>().lastCompletedShift;
+    final provider = context.watch<PossibleShiftProvider>();
+    final shift = provider.lastCompletedShift;
     final activity = shift?.activity;
-    const double battery = 0.75;
+    final int batteryAfter = provider.currentBattery.batteryLevel;
+    final int realBatteryReduction = provider.lastRealBatteryReduction;
+    final int batteryBefore =
+        (batteryAfter + realBatteryReduction).clamp(0, provider.currentBattery.maxLevel);
+    final double battery = batteryAfter / 100.0;
 
     return Scaffold(
       backgroundColor: kGreenLight,
@@ -117,6 +122,22 @@ class Afterdelivery extends StatelessWidget {
                             Icons.attach_money,
                             'Money Earned',
                             '€${shift.earning.toStringAsFixed(2)}',
+                          ),
+                          const Divider(),
+                          _info(
+                            Icons.battery_std,
+                            'Battery before delivery',
+                            '$batteryBefore%',
+                          ),
+                          _info(
+                            Icons.battery_alert,
+                            'Real battery reduction',
+                            '-$realBatteryReduction%',
+                          ),
+                          _info(
+                            Icons.battery_charging_full,
+                            'Battery after delivery',
+                            '$batteryAfter%',
                           ),
                         ],
                       ),

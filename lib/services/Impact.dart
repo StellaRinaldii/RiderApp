@@ -4,12 +4,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exercise_activity.dart';
+import '../models/resting_heart_rate.dart';
+import '../models/sleep_data.dart';
+import 'package:intl/intl.dart';
 
 class Impact {
   static const String baseUrl = 'https://impact.dei.unipd.it/bwthw/';
   static const String tokenEndpoint = 'gate/v1/token/';
   static const String refreshEndpoint = 'gate/v1/refresh/';
   static const String exerciseEndpoint = 'data/v1/exercise/patients/';
+  static const String restingHeartRateEndpoint = 'data/v1/resting_heart_rate/patients/';
+  static const String sleepEndpoint = 'data/v1/sleep/patients/';
 
   static String patientUsername = 'Jpefaq6m58';
   
@@ -128,4 +133,76 @@ class Impact {
     return activities;
 
   } //fetchExerciseDataByDateRange
+
+  // This method fetches the resting heart rate recorded for a single day.
+  // Returns null if the request fails or if no data is available for that day.
+  static Future<RestingHeartRate?> fetchRestingHeartRateByDate(String date) async {
+
+    final sp = await SharedPreferences.getInstance();
+    var access = sp.getString('access');
+
+    if (JwtDecoder.isExpired(access!)) {
+      await Impact.refreshTokens();
+      access = sp.getString('access');
+    }//if
+
+    final url = Impact.baseUrl + Impact.restingHeartRateEndpoint + Impact.patientUsername + '/day/$date/';
+
+    final headers = {HttpHeaders.authorizationHeader: 'Bearer $access'};
+
+    print('Calling: $url');
+    final response = await http.get(Uri.parse(url), headers: headers);
+
+    if (response.statusCode != 200) {
+      return null;
+    }
+
+    final decodedResponse = jsonDecode(response.body);
+
+    final dayData = decodedResponse is Map ? decodedResponse['data'] : null;
+    final readings = dayData is Map ? dayData['data'] : null;
+
+    if (readings is! List || readings.isEmpty) {
+      return null;
+    }
+
+    return RestingHeartRate.fromJson(Map<String, dynamic>.from(readings.first));
+
+  } //fetchRestingHeartRateByDate
+
+  // This method fetches the sleep data recorded for a single day.
+  // Returns null if the request fails or if no data is available for that day.
+  static Future<SleepData?> fetchSleepDataByDate(String date) async {
+
+    final sp = await SharedPreferences.getInstance();
+    var access = sp.getString('access');
+
+    if (JwtDecoder.isExpired(access!)) {
+      await Impact.refreshTokens();
+      access = sp.getString('access');
+    }//if
+
+    final url = Impact.baseUrl + Impact.sleepEndpoint + Impact.patientUsername + '/day/$date/';
+
+    final headers = {HttpHeaders.authorizationHeader: 'Bearer $access'};
+
+    print('Calling: $url');
+    final response = await http.get(Uri.parse(url), headers: headers);
+
+    if (response.statusCode != 200) {
+      return null;
+    }
+
+    final decodedResponse = jsonDecode(response.body);
+
+    final dayData = decodedResponse is Map ? decodedResponse['data'] : null;
+    final readings = dayData is Map ? dayData['data'] : null;
+
+    if (readings is! List || readings.isEmpty) {
+      return null;
+    }
+
+    return SleepData.fromJson(Map<String, dynamic>.from(readings.first));
+
+  } //fetchSleepDataByDate
 }

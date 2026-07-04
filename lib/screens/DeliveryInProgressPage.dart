@@ -10,8 +10,9 @@ const Color kGreenLight = Color(0xFFEAF3DE);
 class DeliveryInProgressPage extends StatelessWidget {
   const DeliveryInProgressPage({super.key});
 
-  void _completeDelivery(BuildContext context) {
-    context.read<PossibleShiftProvider>().completeCurrentDelivery();
+Future<void> _completeDelivery(BuildContext context) async {
+    await context.read<PossibleShiftProvider>().completeCurrentDelivery();
+    if (!context.mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const Afterdelivery()),

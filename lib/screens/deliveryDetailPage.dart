@@ -36,6 +36,10 @@ class DeliveryDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final shift = possibleShift;
     final activity = shift.activity;
+    final currentBattery = context.watch<PossibleShiftProvider>().currentBattery;
+    final int estimatedBatteryAfter =
+        (currentBattery.batteryLevel - shift.estimatedBatteryReduction)
+            .clamp(0, currentBattery.maxLevel);
 
     return Scaffold(
       backgroundColor: kGreenLight,
@@ -67,6 +71,10 @@ class DeliveryDetailPage extends StatelessWidget {
                 _row(Icons.attach_money, 'Earning', '€${shift.earning.toStringAsFixed(2)}'),
                 _row(Icons.fitness_center, 'Effort', shift.effortLabel, valueColor: _effortColor),
                 _row(Icons.stars, 'Points', '+${shift.points} pts'),
+                _row(Icons.battery_alert, 'Estimated battery reduction',
+                    '-${shift.estimatedBatteryReduction}%'),
+                _row(Icons.battery_charging_full, 'Estimated battery after delivery',
+                    '$estimatedBatteryAfter%'),
               ]),
             ),
             const Spacer(),

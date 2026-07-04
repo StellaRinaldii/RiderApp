@@ -137,6 +137,8 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                         '${provider.totalDurationMinutes} min'),
                     _row(Icons.local_fire_department, 'Calories',
                         '${provider.totalCalories.round()} kcal'),
+                    _row(Icons.battery_charging_full, 'Battery after shift',
+                        '${provider.currentBattery.batteryLevel}%'),
                   ],
                 ),
               ),
