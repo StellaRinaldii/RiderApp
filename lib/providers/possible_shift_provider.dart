@@ -6,6 +6,7 @@ import '../models/possible_shift.dart';
 import '../services/Impact.dart';
 import 'package:intl/intl.dart';
 import '../utils/battery_algorithm.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
@@ -77,7 +78,7 @@ class PossibleShiftProvider extends ChangeNotifier {
     _fetchMoreShifts();
   }
 
-  void completeCurrentDelivery() {
+  Future<void> completeCurrentDelivery() async{
     if (currentPossibleShift == null) return;
     final shift = currentPossibleShift!;
     completedDeliveries++;
@@ -90,6 +91,25 @@ class PossibleShiftProvider extends ChangeNotifier {
     possibleShifts.remove(shift);
     currentPossibleShift = null;
     notifyListeners();
+
+    // aggiornamento delle sp:
+    try {
+      final sp = await SharedPreferences.getInstance();
+      // get the values from the SP
+      int? globalPoints = sp.getInt('points');
+      double? globalKm = sp.getDouble('kilometers');
+      double? globalEarnings = sp.getDouble('earnings');
+      // increments the values
+      globalPoints = (globalPoints ?? 0) + shift.points;
+      globalKm = (globalKm ?? 0) + shift.activity.distanceKm;
+      globalEarnings = (globalEarnings ?? 0) + shift.earning;
+      // saves the new counters in the SP
+      await sp.setInt('points', globalPoints);
+      await sp.setDouble('kilometers', globalKm);
+      await sp.setDouble('earnings', globalEarnings);
+    } catch (e) {
+      print("Unsuccesfull Saving of SharedPreferences: $e");
+    }
     _fetchMoreShifts();
   }
 

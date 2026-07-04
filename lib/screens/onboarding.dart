@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:workers_campe/screens/homepage.dart';
@@ -19,8 +21,13 @@ class _OnboardingState extends State<Onboarding> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  
 
   String? _selectedGender;
+  String? _selectTrainingStatus;
+  int? age;
 
   @override
   void initState() {
@@ -33,6 +40,8 @@ class _OnboardingState extends State<Onboarding> {
     _nameController.dispose();
     _surnameController.dispose();
     _dateController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
     super.dispose();
   }
 
@@ -44,6 +53,10 @@ class _OnboardingState extends State<Onboarding> {
       _surnameController.text = sp.getString('surname') ?? '';
       _dateController.text = sp.getString('dob') ?? '';
       _selectedGender = sp.getString('gender');
+      _weightController.text = sp.getString('weight') ?? '';
+      _heightController.text = sp.getString('height') ?? '';
+      _selectTrainingStatus = sp.getString('trainingstat');
+      age = sp.getInt('age') ?? -1;
     });
   }
 
@@ -68,6 +81,11 @@ class _OnboardingState extends State<Onboarding> {
     if (picked != null) {
       setState(() {
         _dateController.text = DateFormat('dd/MM/yyyy').format(picked);
+        // computing the current age of the subject:
+        age = DateTime.now().year -picked.year;
+        if (DateTime.now().month < picked.month && DateTime.now().day < picked.day) {
+          age = age! - 1;
+        }
       });
     }
   }
@@ -81,6 +99,10 @@ class _OnboardingState extends State<Onboarding> {
       await sp.setString('gender', _selectedGender!);
       await sp.setString('dob', _dateController.text);
       await sp.setBool('onboarding_completed', true);
+      await sp.setString('weight', _weightController.text);
+      await sp.setString('height', _heightController.text);
+      await sp.setString('trainingstat', _selectTrainingStatus!);
+      await sp.setInt('age', age!);
 
       if (!mounted) return;
 
@@ -284,11 +306,11 @@ class _OnboardingState extends State<Onboarding> {
                           ),
                           items: const [
                             DropdownMenuItem(
-                              value: 'M',
+                              value: 'Male',
                               child: Text('Male'),
                             ),
                             DropdownMenuItem(
-                              value: 'F',
+                              value: 'Female',
                               child: Text('Female'),
                             ),
                             DropdownMenuItem(
@@ -312,6 +334,40 @@ class _OnboardingState extends State<Onboarding> {
                         const SizedBox(height: 16),
 
                         TextFormField(
+                          controller: _weightController,
+                          decoration: _inputDecoration(
+                            label: 'Weight',
+                            hint: 'Enter your weight (kg)',
+                            icon: Icons.scale_outlined,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your weight';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _heightController,
+                          decoration: _inputDecoration(
+                            label: 'Height',
+                            hint: 'Enter your height (cm)',
+                            icon: Icons.straighten_outlined,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your height';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        TextFormField(
                           controller: _dateController,
                           readOnly: true,
                           decoration: _inputDecoration(
@@ -323,6 +379,42 @@ class _OnboardingState extends State<Onboarding> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please pick a date';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        DropdownButtonFormField<String>(
+                          value: _selectTrainingStatus,
+                          decoration: _inputDecoration(
+                            label: 'Training Status',
+                            hint: 'Choose your level of fitness',
+                            icon: Icons.directions_run_outlined,
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'Beginner',
+                              child: Text('Beginner'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Intermediate',
+                              child: Text('Intermediate'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Advanced',
+                              child: Text('Advanced'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectTrainingStatus = value;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Please choose an option';
                             }
                             return null;
                           },

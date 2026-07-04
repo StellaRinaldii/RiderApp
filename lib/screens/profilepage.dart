@@ -58,7 +58,8 @@ class _ProfilePageState extends State<Profilepage> {
         foregroundColor: kGreenLight,  
       ) ,
 
-      body: Column(
+      body: SingleChildScrollView(
+        child: Column(
             spacing: 5,
             children: 
             <Widget>[
@@ -99,7 +100,7 @@ class _ProfilePageState extends State<Profilepage> {
                                             SizedBox(height: 5,),
                                             _getInfoText(context, 'surname', surname, 'Insert your Surname'),
                                             SizedBox(height: 5,),
-                                            _getInfoText(context, 'gender', gender, 'Insert your Gender (M/F)'),
+                                            _getInfoText(context, 'gender', gender, 'Insert your Sex (Male/Female/Other)'),
                                             SizedBox(height: 5,),
                                             _getInfoText(context, 'weight', weight, 'Insert your Weight (Kg)'),
                                             SizedBox(height: 5,),
@@ -162,24 +163,30 @@ class _ProfilePageState extends State<Profilepage> {
                 child: Column( children: [
                   Text("Trophy Case", style: TextStyle(fontWeight: FontWeight.bold,),),
                   const SizedBox(height: 10,),
-                  Row( children: [
-                    // PREMIO #1
-                       _showTrophy(context,"Trophy achieved! You rode for 10 km!", Icons.pedal_bike, 10),
-                        const Spacer(),
-                    // PREMIO #2
-                       _showTrophy(context, "Trophy achieved! You rode for 100 km!", Icons.bike_scooter, 100),
-                        const Spacer(),
-                    // PREMIO #3
-                       _showTrophy(context, "Trophy achieved! You rode for 1000 km!", Icons.flash_on, 1000) 
-                  ],)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row( children: [
+                      // PREMIO #1
+                         _showTrophy(context,"Trophy achieved! You rode for 10 km!", Icons.pedal_bike, 10),
+                          const SizedBox(width: 20,),
+                      // PREMIO #2
+                         _showTrophy(context, "Trophy achieved! You rode for 100 km!", Icons.bike_scooter, 100),
+                         const SizedBox(width: 20,),
+                      // PREMIO #3
+                         _showTrophy(context, "Trophy achieved! You rode for 500 km!", Icons.flash_on, 500),
+                         const SizedBox(width: 20,),
+                         // PREMIO #3
+                         _showTrophy(context, "Trophy achieved! You rode for 1000 km!", Icons.emoji_events, 1000),
+                    ],),
+                  )
                 ],
                 ),
               ),
-
-              const Spacer(),
               // widget che mostra la distanza totale percorsa e i guadagni totali
               _showDistance(context)
-          ],),
+          ],
+        ),
+      ),
 
    bottomNavigationBar: BottomAppBar(
       color: Colors.white,
@@ -250,6 +257,30 @@ class _ProfilePageState extends State<Profilepage> {
     ],);
   }
 
+  // same thing but in this case to get an int
+  Widget _informationRowint(BuildContext context, String titolo, String nomeSP, String munit){
+    return Row(children: [
+      Expanded(
+        flex: 4, 
+        child: Text(titolo, style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      Expanded(
+        flex: 6, 
+        child:FutureBuilder(
+                      future: getSPint(nomeSP), 
+                      builder: (context, snapshot){
+                          final data = snapshot.data ?? -1;
+                            if (data == Null || data < 0){
+                              return Text("No data available");
+                            } else {
+                              return Text("$data $munit");
+                            }
+                          }
+                    ),
+      ),
+    ],);
+  }
+
   // shows personal informations saved by the subject
   Widget _personalInfo(BuildContext context) {
     return Card( 
@@ -266,6 +297,8 @@ class _ProfilePageState extends State<Profilepage> {
                       SizedBox(height: 5),
                       _informationRow(context, "Gender", "gender", ""),
                       SizedBox(height: 5),
+                      _informationRowint(context, "Age", "age", "years old"),
+                      SizedBox(height: 5),
                       _informationRow(context, "Weight", 'weight', "kg"),
                       SizedBox(height: 5),
                       _informationRow(context, "Height", "height", "cm"),
@@ -274,8 +307,8 @@ class _ProfilePageState extends State<Profilepage> {
                       SizedBox(height: 5),
                       _informationRow(context, "Agency", "agency", ""),
                       SizedBox(height: 5),
-                          //_informationRow(context, "Total Km", "gender", ""),
-                          // mancano le informazioni sui Km
+                      _informationRow(context, "Physical fitness:", "trainingstat", ""),
+                      SizedBox(height: 5),
 
                     ],
                   ),
@@ -303,11 +336,12 @@ class _ProfilePageState extends State<Profilepage> {
 // widget that shows the prizes available that the subject has gained:
 Widget _showTrophy (BuildContext context, String description, IconData icona, double soglia) {
   // inietto il provider nel widget:
-   return Consumer<PossibleShiftProvider>(
-    builder: (context, provider, child) {
+   return FutureBuilder(
+                      future: getSPdouble('kilometers'), 
+                      builder: (context, sp){
 
       // salvo la flag dalla condizione del wiget
-       final distanzainKm = provider.totalDistanceKm;
+       final distanzainKm = sp.data ?? 0;
        // se ho percorso più della soglia, la flag è vera e quindi mostro il premio colorato
        bool flag = distanzainKm >= soglia;
 
@@ -371,10 +405,11 @@ Widget _showDistance (BuildContext context) {
                           const Text("Total distance travelled:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                            builder: (context, provider, child) {
-                              return Text(
-                                "${provider.totalDistanceKm.toStringAsFixed(2)} km",
+                          FutureBuilder(
+                            future: getSPdouble('kilometers'), 
+                            builder: (context, sp){
+                              final double value = sp.data ?? 0;
+                              return Text("${value.toStringAsFixed(2)} km",
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               );
                             },
@@ -382,25 +417,27 @@ Widget _showDistance (BuildContext context) {
                           const Text("Total earnings:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                          builder: (context, provider, child) {
-                            return Text(
-                              "${provider.totalEarnings.toStringAsFixed(2)} €",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            );
-                          },
-                        ),
+                          FutureBuilder(
+                            future: getSPdouble('earnings'), 
+                            builder: (context, sp){
+                              final double value = sp.data ?? 0;
+                              return Text("${value.toStringAsFixed(2)} €",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
                         const Text("Total points:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                          builder: (context, provider, child) {
-                            return Text(
-                              "${provider.totalPoints.toStringAsFixed(2)} €",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            );
-                          },
-                        ),
+                          FutureBuilder(
+                            future: getSPint('points'), 
+                            builder: (context, sp){
+                              final int value = sp.data ?? 0;
+                              return Text("$value points",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
                       ]
       )
     )
@@ -418,6 +455,16 @@ Widget _showDistance (BuildContext context) {
   Future <String?> getSP(String key) async{
     final sp = await SharedPreferences.getInstance();
     return sp.getString(key);
+  }
+
+  Future <int?> getSPint(String key) async{
+    final sp = await SharedPreferences.getInstance();
+    return sp.getInt(key);
+  }
+
+  Future <double?> getSPdouble(String key) async{
+    final sp = await SharedPreferences.getInstance();
+    return sp.getDouble(key);
   }
 
   // function to upload a profile page using image_picker from the gallery

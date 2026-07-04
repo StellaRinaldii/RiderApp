@@ -45,7 +45,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
       ..removeCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text('Chosen fatigue level: $level'),
-        backgroundColor: const Color.fromARGB(255, 227, 227, 227),
+        backgroundColor: const Color.fromARGB(255, 171, 199, 138),
         duration: const Duration(seconds: 4),
       ));
   }
