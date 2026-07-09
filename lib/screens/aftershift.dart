@@ -31,11 +31,13 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     setState(() => _injuryAnswered = true);
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        content: Text('Redirecting Injuries to Occupational Health Physician'),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 4),
-      ));
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Redirecting Injuries to Occupational Health Physician'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
   }
 
   void _onFatigue(int level) {
@@ -43,16 +45,22 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     saveSP('fatigueLevel', level);
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('Chosen fatigue level: $level'),
-        backgroundColor: const Color.fromARGB(255, 227, 227, 227),
-        duration: const Duration(seconds: 4),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Chosen fatigue level: $level'),
+          backgroundColor: const Color.fromARGB(255, 227, 227, 227),
+          duration: const Duration(seconds: 4),
+        ),
+      );
   }
 
   void _onReturn() {
     if (_injuryAnswered && _fatigueAnswered) {
-      context.read<PossibleShiftProvider>().resetShiftSummary();
+      Provider.of<PossibleShiftProvider>(
+        context,
+        listen: false,
+      ).resetShiftSummary();
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -63,23 +71,25 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     } else {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-          content: Text('Please answer all the questions before returning to homepage'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 4),
-        ));
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Please answer all the questions before returning to homepage'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PossibleShiftProvider>();
+    final provider = Provider.of<PossibleShiftProvider>(context);
 
     return Scaffold(
       backgroundColor: kGreenLight,
       body: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               const Text(
@@ -94,7 +104,10 @@ class _AftershiftpageState extends State<Aftershiftpage> {
               if (provider.shiftClosedByEmergency) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -114,7 +127,10 @@ class _AftershiftpageState extends State<Aftershiftpage> {
               if (provider.shiftClosedByLowBattery) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -131,7 +147,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 ),
               ],
 
-              const Spacer(),
+              const SizedBox(height: 24),
 
               Container(
                 padding: const EdgeInsets.all(18),
@@ -148,100 +164,127 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                       child: Image.asset('assets/consegna.png'),
                     ),
                     const SizedBox(height: 5),
-                    _row(Icons.local_activity, 'Deliveries completed',
-                        provider.completedDeliveries.toString()),
-                    _row(Icons.monetization_on, 'Earnings',
-                        '€${provider.totalEarnings.toStringAsFixed(2)}'),
-                    _row(Icons.stars, 'Points', provider.totalPoints.toString()),
-                    _row(Icons.route, 'Distance',
-                        '${provider.totalDistanceKm.toStringAsFixed(2)} km'),
-                    _row(Icons.timer, 'Total time',
-                        '${provider.totalDurationMinutes} min'),
-                    _row(Icons.local_fire_department, 'Calories',
-                        '${provider.totalCalories.round()} kcal'),
-                    _row(Icons.battery_charging_full, 'Battery after shift',
-                        '${provider.currentBattery.batteryLevel}%'),
+                    _row(
+                      Icons.local_activity,
+                      'Deliveries completed',
+                      provider.completedDeliveries.toString(),
+                    ),
+                    _row(
+                      Icons.monetization_on,
+                      'Earnings',
+                      '€${provider.totalEarnings.toStringAsFixed(2)}',
+                    ),
+                    _row(
+                      Icons.stars,
+                      'Points',
+                      provider.totalPoints.toString(),
+                    ),
+                    _row(
+                      Icons.route,
+                      'Distance',
+                      '${provider.totalDistanceKm.toStringAsFixed(2)} km',
+                    ),
+                    _row(
+                      Icons.timer,
+                      'Total time',
+                      '${provider.totalDurationMinutes} min',
+                    ),
+                    _row(
+                      Icons.local_fire_department,
+                      'Calories',
+                      '${provider.totalCalories.round()} kcal',
+                    ),
+                    _row(
+                      Icons.battery_charging_full,
+                      'Battery after shift',
+                      '${provider.currentBattery.batteryLevel}%',
+                    ),
                   ],
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 24),
 
               Card(
                 color: Colors.white,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Column(
                   children: [
-                    Column(
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Were you completely free of injuries?',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Were you completely free of injuries?',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ElevatedButton(
+                          onPressed: _onInjuryYes,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _injuryAnswered
+                                ? Colors.green.shade200
+                                : Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Icon(Icons.check),
                         ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: _onInjuryYes,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _injuryAnswered
-                                    ? Colors.green.shade200
-                                    : Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Icon(Icons.check),
-                            ),
-                            const SizedBox(width: 30),
-                            ElevatedButton(
-                              onPressed: _onInjuryNo,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.deepOrangeAccent,
-                              ),
-                              child: const Icon(Icons.cancel),
-                            ),
-                          ],
+                        const SizedBox(width: 30),
+                        ElevatedButton(
+                          onPressed: _onInjuryNo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Icon(Icons.cancel),
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'How would you rate your level of fatigue?',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () => _onFatigue(4),
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
-                              child: const Icon(Icons.sentiment_dissatisfied),
-                            ),
-                            TextButton(
-                              onPressed: () => _onFatigue(3),
-                              style: TextButton.styleFrom(foregroundColor: Colors.orange),
-                              child: const Icon(Icons.sentiment_neutral),
-                            ),
-                            TextButton(
-                              onPressed: () => _onFatigue(2),
-                              style: TextButton.styleFrom(foregroundColor: Colors.amber),
-                              child: const Icon(Icons.sentiment_satisfied),
-                            ),
-                            TextButton(
-                              onPressed: () => _onFatigue(1),
-                              style: TextButton.styleFrom(foregroundColor: Colors.green),
-                              child: const Icon(Icons.sentiment_very_satisfied),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'How would you rate your level of fatigue?',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () => _onFatigue(4),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                          child: const Icon(Icons.sentiment_dissatisfied),
+                        ),
+                        TextButton(
+                          onPressed: () => _onFatigue(3),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.orange,
+                          ),
+                          child: const Icon(Icons.sentiment_neutral),
+                        ),
+                        TextButton(
+                          onPressed: () => _onFatigue(2),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.amber,
+                          ),
+                          child: const Icon(Icons.sentiment_satisfied),
+                        ),
+                        TextButton(
+                          onPressed: () => _onFatigue(1),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.green,
+                          ),
+                          child: const Icon(Icons.sentiment_very_satisfied),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 8),
 
               SizedBox(
                 width: double.infinity,
@@ -258,10 +301,15 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                   icon: const Icon(Icons.home),
                   label: const Text(
                     'Return to Homepage',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -276,8 +324,16 @@ class _AftershiftpageState extends State<Aftershiftpage> {
         children: [
           Icon(icon, color: kGreen),
           const SizedBox(width: 12),
-          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value, textAlign: TextAlign.right)),
+          Text(
+            '$title: ',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

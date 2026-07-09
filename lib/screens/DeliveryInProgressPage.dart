@@ -7,11 +7,27 @@ import 'package:workers_campe/screens/aftershift.dart';
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
-class DeliveryInProgressPage extends StatelessWidget {
+class DeliveryInProgressPage extends StatefulWidget {
   const DeliveryInProgressPage({super.key});
 
+  @override
+  State<DeliveryInProgressPage> createState() => _DeliveryInProgressPageState();
+}
+
+class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
+  bool _isCompleting = false;
+
   Future<void> _completeDelivery(BuildContext context) async {
-    final provider = context.read<PossibleShiftProvider>();
+    if (_isCompleting) return;
+
+    setState(() {
+      _isCompleting = true;
+    });
+
+    final provider = Provider.of<PossibleShiftProvider>(
+      context,
+      listen: false,
+    );
 
     await provider.completeCurrentDelivery();
 
@@ -20,11 +36,13 @@ class DeliveryInProgressPage extends StatelessWidget {
     if (provider.shiftClosedByLowBattery) {
       ScaffoldMessenger.of(context)
         ..removeCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-          content: Text('Battery low: it’s time to rest.'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ));
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Battery low: it’s time to rest.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
 
       Navigator.pushReplacement(
         context,
@@ -41,7 +59,12 @@ class DeliveryInProgressPage extends StatelessWidget {
 
   void _onEmergencyConfirmed(BuildContext context) {
     Navigator.of(context).pop();
-    context.read<PossibleShiftProvider>().finishShift(emergency: true);
+
+    Provider.of<PossibleShiftProvider>(
+      context,
+      listen: false,
+    ).finishShift(emergency: true);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         backgroundColor: Colors.red,
@@ -50,6 +73,7 @@ class DeliveryInProgressPage extends StatelessWidget {
         content: Text('Emergency request sent. Calling 118...'),
       ),
     );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const Aftershiftpage()),
@@ -57,29 +81,43 @@ class DeliveryInProgressPage extends StatelessWidget {
   }
 
   void _showEmergencyDialog(BuildContext context) {
+    if (_isCompleting) return;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: kGreenLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Emergency call',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-        content: Text('Do you want to call 118 and report an emergency?',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey[700])),
+        title: const Text(
+          'Emergency call',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+        ),
+        content: Text(
+          'Do you want to call 118 and report an emergency?',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey[700]),
+        ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel',
-                style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
             onPressed: () => _onEmergencyConfirmed(context),
             child: const Text('Call 118'),
           ),
@@ -103,22 +141,35 @@ class DeliveryInProgressPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 25),
-            const Text('Delivery in progress...',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kGreen)),
+            const Text(
+              'Delivery in progress...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: kGreen,
+              ),
+            ),
             const SizedBox(height: 10),
-            Text('Stay safe and enjoy the ride!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: Colors.grey[700])),
+            Text(
+              'Stay safe and enjoy the ride!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Colors.grey[700]),
+            ),
             const SizedBox(height: 35),
             Container(
               height: 160,
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: kGreenLight, borderRadius: BorderRadius.circular(28)),
-              child: Image.asset('assets/gifs/rider.gif',
-                  fit: BoxFit.contain, filterQuality: FilterQuality.none),
+                color: kGreenLight,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Image.asset(
+                'assets/gifs/rider.gif',
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.none,
+              ),
             ),
             const SizedBox(height: 35),
             Container(
@@ -127,15 +178,29 @@ class DeliveryInProgressPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   const Icon(Icons.navigation, color: kGreen, size: 36),
                   const SizedBox(height: 10),
-                  Text('Keep going! You\'re almost there.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey[700])),
+                  Text(
+                    _isCompleting
+                        ? 'Completing delivery...'
+                        : 'Keep going! You\'re almost there.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.4,
+                      color: Colors.grey[700],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -146,12 +211,21 @@ class DeliveryInProgressPage extends StatelessWidget {
                 height: 46,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-                  onPressed: () => _showEmergencyDialog(context),
-                  child: const Text('Emergency',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  onPressed:
+                      _isCompleting ? null : () => _showEmergencyDialog(context),
+                  child: const Text(
+                    'Emergency',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -161,13 +235,33 @@ class DeliveryInProgressPage extends StatelessWidget {
               height: 54,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-                onPressed: () => _completeDelivery(context),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Complete delivery',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  backgroundColor: kGreen,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey,
+                  disabledForegroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed:
+                    _isCompleting ? null : () => _completeDelivery(context),
+                icon: _isCompleting
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.check_circle_outline),
+                label: Text(
+                  _isCompleting ? 'Completing...' : 'Complete delivery',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],

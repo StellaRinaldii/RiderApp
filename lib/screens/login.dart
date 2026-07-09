@@ -4,17 +4,6 @@ import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/onboarding.dart';
 import 'package:workers_campe/services/Impact.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const LoginPage(),
-    );
-  }
-}
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
@@ -119,102 +108,116 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: kGreenLight,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: 20.0,
-              right: 20.0,
-              top: 30,
-              bottom: 10,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Image.asset(
-                    'assets/logoproject.png',
-                    scale: 4,
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-
-                const SizedBox(height: 30),
-
-                const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 25,
-                    color: kGreen,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                TextField(
-                  controller: userController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: inputStyle(
-                    'Username',
-                    'Enter your username',
-                    Icons.email_outlined,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: inputStyle(
-                    'Password',
-                    'Enter password',
-                    Icons.lock_outline,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Center(
-                  child: SizedBox(
-                    height: 52,
-                    width: 250,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kGreen,
-                        foregroundColor: Colors.white,
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 20.0,
+                      right: 20.0,
+                      top: 30,
+                      bottom: 10,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Image.asset(
+                            'assets/logoproject.png',
+                            scale: 4,
+                          ),
                         ),
-                      ),
-                      onPressed: _login,
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+
+                        const SizedBox(height: 30),
+
+                        const Text(
+                          'Login',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 25,
+                            color: kGreen,
+                          ),
                         ),
-                      ),
+
+                        const SizedBox(height: 30),
+
+                        TextField(
+                          controller: userController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: inputStyle(
+                            'Username',
+                            'Enter your username',
+                            Icons.email_outlined,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        TextField(
+                          controller: passwordController,
+                          obscureText: true,
+                          decoration: inputStyle(
+                            'Password',
+                            'Enter password',
+                            Icons.lock_outline,
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        Center(
+                          child: SizedBox(
+                            height: 52,
+                            width: 250,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              onPressed: _login,
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        const Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 24),
+                            child: Text(
+                              "By logging in, you agree to RideSmart's\nTerms & Conditions and Privacy Policy",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 260),
-
-                const Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    "By logging in, you agree to NameGroup's\nTerms & Conditions and Privacy Policy",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

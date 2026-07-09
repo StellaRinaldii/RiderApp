@@ -13,7 +13,11 @@ class Afterdelivery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PossibleShiftProvider>();
+    final provider = Provider.of<PossibleShiftProvider>(
+      context,
+      listen: true,
+    );
+
     final shift = provider.lastCompletedShift;
     final activity = shift?.activity;
     final int batteryAfter = provider.currentBattery.batteryLevel;
@@ -160,34 +164,16 @@ class Afterdelivery extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    Container(
-                      height: 18,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: battery.clamp(0.0, 1.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: battery < 0.21
-                                ? Colors.red
-                                : battery < 0.7
-                                    ? Colors.yellow
-                                    : Colors.green,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      ),
+                    _batteryHistoryBar(
+                      batteryHistory: provider.batteryHistory,
+                      batteryReductionHistory: provider.batteryReductionHistory,
                     ),
 
                     const SizedBox(height: 10),
 
                     Text(
                       '${(battery * 100).round()}% - '
-                      '${battery < 0.2 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
+                      '${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
@@ -236,7 +222,7 @@ class Afterdelivery extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.home),
                   label: const Text(
-                    'Return to Homepage',
+                    'Return to Home',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -304,127 +290,256 @@ class Afterdelivery extends StatelessWidget {
           ],
         ),
       );
-  
-  static Widget _hrZonesChart(List<HeartRateZone> zones) {
-  final maxMinutes = zones
-      .map((z) => z.minutes)
-      .fold<int>(1, (a, b) => a > b ? a : b);
 
-  final maxY = ((maxMinutes / 50).ceil() * 50).toDouble();
+  static Widget _batteryHistoryBar({
+    required List<int> batteryHistory,
+    required List<int> batteryReductionHistory,
+  }) {
+    final int currentBattery =
+        batteryHistory.isNotEmpty ? batteryHistory.last : 0;
 
-  return SizedBox(
-    height: 280,
-    child: BarChart(
-      BarChartData(
-        maxY: maxY,
-        alignment: BarChartAlignment.spaceAround,
-        barGroups: List.generate(
-          zones.length,
-          (index) {
-            final zone = zones[index];
+    final double battery = currentBattery / 100.0;
 
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: zone.minutes.toDouble(),
-                  width: 26,
-                  color: kGreen,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ],
-            );
-          },
-        ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: 25,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.shade400,
-              strokeWidth: 1,
-              dashArray: [8, 6],
-            );
-          },
-        ),
-        borderData: FlBorderData(show: false),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 32,
-              interval: 25,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
-                  ),
-                );
-              },
-            ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 70,
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 140,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double barWidth = constraints.maxWidth;
 
-                if (index < 0 || index >= zones.length) {
-                  return const SizedBox.shrink();
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: SizedBox(
-                    width: 85,
-                    child: Text(
-                      _formatZoneLabel(zones[index].name),
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.black87,
+              return Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 48,
+                    child: Container(
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ),
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final zone = zones[group.x];
 
-              return BarTooltipItem(
-                '${zone.name}\n${zone.minutes} min',
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                  Positioned(
+                    left: 0,
+                    top: 48,
+                    child: Container(
+                      height: 18,
+                      width: barWidth * battery.clamp(0.0, 1.0),
+                      decoration: BoxDecoration(
+                        color: battery <= 0.25
+                            ? Colors.red
+                            : battery < 0.7
+                                ? Colors.yellow
+                                : Colors.green,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+
+                  for (int i = 0; i < batteryReductionHistory.length; i++)
+                    if (i + 1 < batteryHistory.length)
+                      Positioned(
+                        left: (barWidth *
+                                (batteryHistory[i + 1] / 100.0)
+                                    .clamp(0.0, 1.0)) -
+                            18,
+                        top: i.isEven ? 0 : 78,
+                        child: Column(
+                          children: i.isEven
+                              ? [
+                                  Text(
+                                    '-${batteryReductionHistory[i]}%',
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.red,
+                                    size: 24,
+                                  ),
+                                  Text(
+                                    'D${i + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ]
+                              : [
+                                  Text(
+                                    'D${i + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_drop_up,
+                                    color: Colors.red,
+                                    size: 24,
+                                  ),
+                                  Text(
+                                    '-${batteryReductionHistory[i]}%',
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                        ),
+                      ),
+                ],
               );
             },
           ),
         ),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              '$currentBattery%',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static Widget _hrZonesChart(List<HeartRateZone> zones) {
+    final maxMinutes = zones
+        .map((z) => z.minutes)
+        .fold<int>(1, (a, b) => a > b ? a : b);
+
+    final maxY = ((maxMinutes / 50).ceil() * 50).toDouble();
+
+    return SizedBox(
+      height: 280,
+      child: BarChart(
+        BarChartData(
+          maxY: maxY,
+          alignment: BarChartAlignment.spaceAround,
+          barGroups: List.generate(
+            zones.length,
+            (index) {
+              final zone = zones[index];
+
+              return BarChartGroupData(
+                x: index,
+                barRods: [
+                  BarChartRodData(
+                    toY: zone.minutes.toDouble(),
+                    width: 26,
+                    color: kGreen,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ],
+              );
+            },
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: 25,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.grey.shade400,
+                strokeWidth: 1,
+                dashArray: [8, 6],
+              );
+            },
+          ),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 32,
+                interval: 25,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    value.toInt().toString(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.black54,
+                    ),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 70,
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+
+                  if (index < 0 || index >= zones.length) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SizedBox(
+                      width: 85,
+                      child: Text(
+                        _formatZoneLabel(zones[index].name),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final zone = zones[group.x];
+
+                return BarTooltipItem(
+                  '${zone.name}\n${zone.minutes} min',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-static String _formatZoneLabel(String label) {
-  return label.replaceAll(' ', '\n');
-}
-
+  static String _formatZoneLabel(String label) {
+    return label.replaceAll(' ', '\n');
+  }
 }

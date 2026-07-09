@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/exercise_activity.dart';
 import '../models/possible_shift.dart';
 import '../services/Impact.dart';
-import 'package:intl/intl.dart';
 import '../utils/battery_algorithm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
@@ -34,6 +32,13 @@ class PossibleShiftProvider extends ChangeNotifier {
   // real HR data), and the future sleep-recovery gain, updated elsewhere.
   int lastRealBatteryReduction = 0;
   int lastSleepBatteryGain = 0;
+
+  // Battery history during the current shift.
+  // Example:
+  // batteryHistory = [100, 70, 30]
+  // batteryReductionHistory = [30, 40]
+  List<int> batteryHistory = [];
+  List<int> batteryReductionHistory = [];
 
   // true right after the user comes back to the Home from the aftershift
   // screen: the Home will wait ~10 seconds and then apply the sleep
@@ -68,6 +73,10 @@ class PossibleShiftProvider extends ChangeNotifier {
     _weekOffset = 0;
     possibleShifts = [];
     shiftStarted = true;
+
+    batteryHistory.clear();
+    batteryReductionHistory.clear();
+    batteryHistory.add(currentBattery.batteryLevel);
 
     notifyListeners();
 
@@ -152,13 +161,50 @@ class PossibleShiftProvider extends ChangeNotifier {
 
     final int levelBeforeGain = currentBattery.batteryLevel;
 
+    // First compute the theoretical sleep recovery.
     currentBattery.batterygain(efficiency, durationMinutes);
 
-    lastSleepBatteryGain = currentBattery.batteryLevel - levelBeforeGain;
+    final int rawSleepGain = currentBattery.batteryLevel - levelBeforeGain;
+
+    // Read the fatigue level selected in Aftershift.
+    // fatigueLevel is saved when the user presses one of the fatigue icons.
+    final sp = await SharedPreferences.getInstance();
+    final int fatigueLevel = sp.getInt('fatigueLevel') ?? 1;
+
+    // Borg-inspired correction:
+    // higher perceived fatigue means lower effective recovery.
+    double recoveryFactor;
+
+    switch (fatigueLevel) {
+      case 4:
+        recoveryFactor = 0.55;
+        break;
+      case 3:
+        recoveryFactor = 0.70;
+        break;
+      case 2:
+        recoveryFactor = 0.85;
+        break;
+      default:
+        recoveryFactor = 1.0;
+    }
+
+    final int adjustedSleepGain = (rawSleepGain * recoveryFactor).round();
+
+    currentBattery.batteryLevel = levelBeforeGain + adjustedSleepGain;
+
+    if (currentBattery.batteryLevel > currentBattery.maxLevel) {
+      currentBattery.batteryLevel = currentBattery.maxLevel;
+    }
+
+    lastSleepBatteryGain = adjustedSleepGain;
     sleepRecoveryPending = false;
 
     print('[SLEEP] Battery before sleep recovery: $levelBeforeGain%');
-    print('[SLEEP] Battery gain: +$lastSleepBatteryGain%');
+    print('[SLEEP] Raw battery gain from sleep: +$rawSleepGain%');
+    print('[SLEEP] Fatigue level: $fatigueLevel');
+    print('[SLEEP] Borg recovery factor: $recoveryFactor');
+    print('[SLEEP] Adjusted battery gain: +$lastSleepBatteryGain%');
     print('[SLEEP] Battery after sleep recovery: ${currentBattery.batteryLevel}%');
 
     notifyListeners();
@@ -167,11 +213,12 @@ class PossibleShiftProvider extends ChangeNotifier {
 
     if (usedRealData) {
       return 'Sleep recovery applied: you slept ${sleepHours.toStringAsFixed(1)} hours '
-          'with $efficiency% efficiency. Battery +$lastSleepBatteryGain%';
+          'with $efficiency% efficiency. Fatigue level: $fatigueLevel. '
+          'Battery +$lastSleepBatteryGain%';
     }
 
     return 'Sleep data not found, default recovery applied: 8h sleep, 80% efficiency. '
-        'Battery +$lastSleepBatteryGain%';
+        'Fatigue level: $fatigueLevel. Battery +$lastSleepBatteryGain%';
   }
 
   void selectPossibleShift(PossibleShift shift) {
@@ -264,6 +311,9 @@ class PossibleShiftProvider extends ChangeNotifier {
 
     currentBattery.batteryloss(lastRealBatteryReduction);
 
+    batteryReductionHistory.add(lastRealBatteryReduction);
+    batteryHistory.add(currentBattery.batteryLevel);
+
     print('[BATTERY] Battery after real loss: ${currentBattery.batteryLevel}%');
 
     if (currentBattery.batteryLevel <= restThreshold) {
@@ -305,6 +355,16 @@ class PossibleShiftProvider extends ChangeNotifier {
 
   Future<void> _fetchMoreShifts() async {
     if (isLoading) return;
+
+    if (currentBattery.batteryLevel <= restThreshold) {
+      possibleShifts = [];
+      errorMessage =
+          'Battery too low. No more deliveries can be suggested because it may be unsafe.';
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -329,8 +389,8 @@ class PossibleShiftProvider extends ChangeNotifier {
           checked++;
 
           final activities = await Impact.fetchExerciseDataByDateRange(
-            startDate: _fmt(start),
-            endDate: _fmt(end),
+            startDate: Impact.formatDate(start),
+            endDate: Impact.formatDate(end),
           );
 
           if (activities == null) {
@@ -370,7 +430,6 @@ class PossibleShiftProvider extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
-
 
   PossibleShift _buildShift(ExerciseActivity activity, int index) {
     final effort = _effort(activity);
@@ -415,13 +474,12 @@ class PossibleShiftProvider extends ChangeNotifier {
 
   static String _effortLabel(EffortType e) {
     switch (e) {
-      case EffortType.low: return 'Low effort';
-      case EffortType.moderate: return 'Moderate effort';
-      case EffortType.high: return 'High effort';
+      case EffortType.low:
+        return 'Low effort';
+      case EffortType.moderate:
+        return 'Moderate effort';
+      case EffortType.high:
+        return 'High effort';
     }
   }
-  
-  static String _fmt(DateTime d) {
-    return DateFormat('yyyy-MM-dd').format(d);
-}
 }

@@ -180,7 +180,7 @@ class _ProfilePageState extends State<Profilepage> {
                                   foregroundColor: kGreen,
                                   backgroundColor: Colors.transparent,
                                 ),
-                                child: const Text("Save Profile"),
+                                child: const Text("Done"),
                               ),
                             ],
                           );
@@ -189,7 +189,7 @@ class _ProfilePageState extends State<Profilepage> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kGreen,
-                      foregroundColor: Colors.black,
+                      foregroundColor: Colors.white,
                     ),
                     child: const Text("Edit Profile"),
                   ),
@@ -397,7 +397,7 @@ class _ProfilePageState extends State<Profilepage> {
           children: [
             const SizedBox(width: 50),
             const Text(
-              "Personal Informations:",
+              "Personal Information:",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: kGreen,

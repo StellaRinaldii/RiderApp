@@ -119,20 +119,6 @@ class _OnboardingState extends State<Onboarding> {
     }
   }
 
-  Future<void> _skipOnboarding() async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.setBool('onboarding_completed', true);
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomePage(),
-      ),
-    );
-  }
-
   InputDecoration _inputDecoration({
     required String label,
     required String hint,
@@ -198,29 +184,11 @@ class _OnboardingState extends State<Onboarding> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _skipOnboarding,
-                  style: TextButton.styleFrom(
-                    foregroundColor: kGreen,
-                  ),
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
               Image.asset(
                 'assets/logoproject.png',
                 height: 90,
               ),
-
+              
               const SizedBox(height: 24),
 
               const Text(
@@ -332,6 +300,7 @@ class _OnboardingState extends State<Onboarding> {
 
                         TextFormField(
                           controller: _weightController,
+                          keyboardType: TextInputType.number,
                           decoration: _inputDecoration(
                             label: 'Weight',
                             hint: 'Enter your weight (kg)',
@@ -341,6 +310,9 @@ class _OnboardingState extends State<Onboarding> {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter your weight';
                             }
+                            if (double.tryParse(value.trim()) == null) {
+                              return 'Please enter a valid weight';
+                            }
                             return null;
                           },
                         ),
@@ -349,6 +321,7 @@ class _OnboardingState extends State<Onboarding> {
 
                         TextFormField(
                           controller: _heightController,
+                          keyboardType: TextInputType.number,
                           decoration: _inputDecoration(
                             label: 'Height',
                             hint: 'Enter your height (cm)',
@@ -357,6 +330,9 @@ class _OnboardingState extends State<Onboarding> {
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter your height';
+                            }
+                            if (double.tryParse(value.trim()) == null) {
+                              return 'Please enter a valid height';
                             }
                             return null;
                           },

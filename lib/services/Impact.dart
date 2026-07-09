@@ -17,7 +17,9 @@ class Impact {
   static const String sleepEndpoint = 'data/v1/sleep/patients/';
 
   static String patientUsername = 'Jpefaq6m58';
-  
+  static String formatDate(DateTime date) {
+  return DateFormat('yyyy-MM-dd').format(date);
+}
 // This method allows to get the JWT from Impact and store it in SharedPreferences
   Future<int> getAndStoreTokens(String username, String password) async {
     //Create the request
