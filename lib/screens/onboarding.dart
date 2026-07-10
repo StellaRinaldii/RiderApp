@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:workers_campe/screens/homepage.dart';
@@ -41,8 +39,6 @@ class _OnboardingState extends State<Onboarding> {
     _dateController.dispose();
     _weightController.dispose();
     _heightController.dispose();
-    _weightController.dispose();
-    _heightController.dispose();
     super.dispose();
   }
 
@@ -54,10 +50,6 @@ class _OnboardingState extends State<Onboarding> {
       _surnameController.text = sp.getString('surname') ?? '';
       _dateController.text = sp.getString('dob') ?? '';
       _selectedGender = sp.getString('gender');
-      _weightController.text = sp.getString('weight') ?? '';
-      _heightController.text = sp.getString('height') ?? '';
-      _selectTrainingStatus = sp.getString('trainingstat');
-      age = sp.getInt('age') ?? -1;
       _weightController.text = sp.getString('weight') ?? '';
       _heightController.text = sp.getString('height') ?? '';
       _selectTrainingStatus = sp.getString('trainingstat');
@@ -104,10 +96,6 @@ class _OnboardingState extends State<Onboarding> {
       await sp.setString('gender', _selectedGender!);
       await sp.setString('dob', _dateController.text);
       await sp.setBool('onboarding_completed', true);
-      await sp.setString('weight', _weightController.text);
-      await sp.setString('height', _heightController.text);
-      await sp.setString('trainingstat', _selectTrainingStatus!);
-      await sp.setInt('age', age!);
       await sp.setString('weight', _weightController.text);
       await sp.setString('height', _heightController.text);
       await sp.setString('trainingstat', _selectTrainingStatus!);
@@ -364,42 +352,6 @@ class _OnboardingState extends State<Onboarding> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please pick a date';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        DropdownButtonFormField<String>(
-                          value: _selectTrainingStatus,
-                          decoration: _inputDecoration(
-                            label: 'Training Status',
-                            hint: 'Choose your level of fitness',
-                            icon: Icons.directions_run_outlined,
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Beginner',
-                              child: Text('Beginner'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Intermediate',
-                              child: Text('Intermediate'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Advanced',
-                              child: Text('Advanced'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              _selectTrainingStatus = value;
-                            });
-                          },
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please choose an option';
                             }
                             return null;
                           },

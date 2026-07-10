@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:provider/provider.dart';
 
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/login.dart';
@@ -11,6 +10,7 @@ import 'package:workers_campe/providers/possible_shift_provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
@@ -41,6 +41,7 @@ class _ProfilePageState extends State<Profilepage> {
   late ConfettiController _controller;
   // carichiamo possibili immagini profilo salvate nelle sp:
   // load possible profile images saved in the shared preference
+
   @override
   void initState() {
     super.initState();
@@ -181,17 +182,6 @@ class _ProfilePageState extends State<Profilepage> {
                                     'agency',
                                     agency,
                                     'Insert the name of your Agency',
-                                  ),
-                                  const SizedBox(height: 10),
-
-                                  // Button to modify the profile picture.
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: kGreen,
-                                      foregroundColor: kGreenLight,
-                                    ),
-                                    onPressed: _pickImage,
-                                    child: const Text("Modify Profile Picture"),
                                   ),
                                 ],
                               ),
@@ -418,6 +408,8 @@ class _ProfilePageState extends State<Profilepage> {
                       SizedBox(height: 5),
                       _informationRow(context, "Gender", "gender", ""),
                       SizedBox(height: 5),
+                       _informationRowint(context, "Age", "age", "years"),
+                      SizedBox(height: 5),
                       _informationRow(context, "Weight", 'weight', "kg"),
                       SizedBox(height: 5),
                       _informationRow(context, "Height", "height", "cm"),
@@ -425,6 +417,8 @@ class _ProfilePageState extends State<Profilepage> {
                       _informationRow(context, "City", "city", ""),
                       SizedBox(height: 5),
                       _informationRow(context, "Agency", "agency", ""),
+                      SizedBox(height: 5),
+                      _informationRow(context, "Physical fitness", "trainingstat", ""),
                       SizedBox(height: 5),
                           //_informationRow(context, "Total Km", "gender", ""),
                           // mancano le informazioni sui Km
@@ -460,59 +454,62 @@ class _ProfilePageState extends State<Profilepage> {
 // widget that shows the prizes available that the subject has gained:
 Widget _showTrophy (BuildContext context, String description, IconData icona, double soglia) {
   // inietto il provider nel widget:
-   return Consumer<PossibleShiftProvider>(
-    builder: (context, provider, child) {
+   return FutureBuilder(
+                      future: getSPdouble('kilometers'), 
+                      builder: (context, sp){
 
       // salvo la flag dalla condizione del wiget
-       final distanzainKm = provider.totalDistanceKm;
+       final distanzainKm = sp.data ?? 0;
        // se ho percorso più della soglia, la flag è vera e quindi mostro il premio colorato
        bool flag = distanzainKm >= soglia;
 
-        if (flag) {
-          return ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                ..removeCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(description),
-                    backgroundColor: kGreen,
-                    duration: const Duration(seconds: 4),
-                  ),
-                );
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(120, 120),
-              shape: const StarBorder(),
-              backgroundColor: kGreen,
-              foregroundColor: kGreenLight,
-            ),
-            child: Icon(icona, size: 20),
-          );
-        } else {
-          return ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                ..removeCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text("Trophy not yet received... keep riding!"),
-                    backgroundColor: CupertinoColors.opaqueSeparator,
-                    duration: Duration(seconds: 4),
-                  ),
-                );
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(120, 120),
-              shape: const StarBorder(),
-              backgroundColor: CupertinoColors.opaqueSeparator,
-              foregroundColor: Colors.white,
-            ),
-            child: Icon(icona, size: 20),
-          );
-        }
-      },
-    );
+  if (flag) {
+  return ElevatedButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context)
+                            ..removeCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(description),
+                                backgroundColor: kGreen,
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          return;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(120, 120),
+                        shape: StarBorder(),  // forma del premio
+                        backgroundColor: kGreen, // Colore di sfondo
+                        foregroundColor: kGreenLight, // Colore del testo/icona
+                      ),
+                      child: Icon(icona, size: 20), 
+                    );
+  } else {
+  return ElevatedButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context)
+                            ..removeCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text("Trophy not yet recived... keep riding!"),
+                                backgroundColor: CupertinoColors.opaqueSeparator,
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          return;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(120, 120),
+                        shape: StarBorder(),  // forma del premio
+                        backgroundColor: CupertinoColors.opaqueSeparator, // Colore di sfondo
+                        foregroundColor: Colors.white// Colore del testo/icona
+                      ),
+                      child: Icon(icona, size: 20), 
+                    );
+      } // fine else
+     }
+   );
   }
 
 // widget che mostra i guadagni totali e i km tot percorsi usando il provider
@@ -526,10 +523,11 @@ Widget _showDistance (BuildContext context) {
                           const Text("Total distance travelled:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                            builder: (context, provider, child) {
-                              return Text(
-                                "${provider.totalDistanceKm.toStringAsFixed(2)} km",
+                          FutureBuilder(
+                            future: getSPdouble('kilometers'), 
+                            builder: (context, sp){
+                              final double value = sp.data ?? 0;
+                              return Text("${value.toStringAsFixed(2)} km",
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               );
                             },
@@ -537,31 +535,32 @@ Widget _showDistance (BuildContext context) {
                           const Text("Total earnings:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                          builder: (context, provider, child) {
-                            return Text(
-                              "${provider.totalEarnings.toStringAsFixed(2)} €",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            );
-                          },
-                        ),
+                          FutureBuilder(
+                            future: getSPdouble('earnings'), 
+                            builder: (context, sp){
+                              final double value = sp.data ?? 0;
+                              return Text("${value.toStringAsFixed(2)} €",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
                         const Text("Total points:",
                               style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                           ),
-                          Consumer<PossibleShiftProvider>(
-                          builder: (context, provider, child) {
-                            return Text(
-                              "${provider.totalPoints.toStringAsFixed(2)} €",
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            );
-                          },
-                        ),
+                          FutureBuilder(
+                            future: getSPint('points'), 
+                            builder: (context, sp){
+                              final int value = sp.data ?? 0;
+                              return Text("$value points",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
                       ]
       )
     )
   );
 }
-
   // FUNCTIONS
 
   // Function to save SharedPreferences values.

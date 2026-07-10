@@ -78,23 +78,18 @@ class _AftershiftpageState extends State<Aftershiftpage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<PossibleShiftProvider>(context);
+    Color iconColorDark =  provider.shiftClosedByEmergency ? darkRed : kGreen;
+    Color iconColorLight = provider.shiftClosedByEmergency ? lightRed : kGreenLight;
+  
 
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: iconColorLight,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Text(
-                'SHIFT ENDED!',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: provider.shiftClosedByEmergency ? Colors.white : kGreen,
-                ),
-              ),
-
+              
               if (provider.shiftClosedByEmergency) ...[
                 const SizedBox(height: 8),
                 Container(
@@ -150,12 +145,12 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       ' Your Shift Summary',
                       style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
-                        color: kGreen,
+                        color: iconColorDark,
                       ),
                     ),
                   
@@ -183,37 +178,37 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                     _row(
                       Icons.local_activity,
                       'Deliveries completed',
-                      provider.completedDeliveries.toString(), provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      provider.completedDeliveries.toString(), iconColorDark
                     ),
                     _row(
                       Icons.monetization_on,
                       'Earnings',
-                      '€${provider.totalEarnings.toStringAsFixed(2)}', provider.shiftClosedByEmergency ? darkRed : kGreen
+                      '€${provider.totalEarnings.toStringAsFixed(2)}', iconColorDark
                     ),
                     _row(
                       Icons.stars,
                       'Points',
-                      provider.totalPoints.toString(), provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      provider.totalPoints.toString(), iconColorDark,
                     ),
                     _row(
                       Icons.route,
                       'Distance',
-                      '${provider.totalDistanceKm.toStringAsFixed(2)} km', provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      '${provider.totalDistanceKm.toStringAsFixed(2)} km', iconColorDark,
                     ),
                     _row(
                       Icons.timer,
                       'Total time',
-                      '${provider.totalDurationMinutes} min', provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      '${provider.totalDurationMinutes} min', iconColorDark,
                     ),
                     _row(
                       Icons.local_fire_department,
                       'Calories',
-                      '${provider.totalCalories.round()} kcal',provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      '${provider.totalCalories.round()} kcal', iconColorDark,
                     ),
                     _row(
                       Icons.battery_charging_full,
                       'Battery after shift',
-                      '${provider.currentBattery.batteryLevel}%',provider.shiftClosedByEmergency ? darkRed : kGreen,
+                      '${provider.currentBattery.batteryLevel}%', iconColorDark,
                     ),
                   ],
                 ),
@@ -221,85 +216,57 @@ class _AftershiftpageState extends State<Aftershiftpage> {
 
               const SizedBox(height: 24),
 
-              Card(
+                            Card(
                 color: Colors.white,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Column(
                   children: [
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Were you completely free of injuries?',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ElevatedButton(
-                          onPressed: _onProblemYes,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _injuryAnswered
-                                ? Colors.green.shade200
-                                : Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Icon(Icons.check),
+                         const SizedBox(height: 10),
+                        if (provider.shiftClosedByEmergency)
+                          _injuryDelivery()
+                        else
+                          _noInjuryDelivery(),
+
+                        const SizedBox(height: 10),
+                        const Text(
+                          'How would you rate your level of fatigue?',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 30),
-                        ElevatedButton(
-                          onPressed: _onProblemNo,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Icon(Icons.cancel),
+                        const SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () => _onFatigue(4),
+                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              child: const Icon(Icons.sentiment_dissatisfied),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(3),
+                              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                              child: const Icon(Icons.sentiment_neutral),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(2),
+                              style: TextButton.styleFrom(foregroundColor: Colors.amber),
+                              child: const Icon(Icons.sentiment_satisfied),
+                            ),
+                            TextButton(
+                              onPressed: () => _onFatigue(1),
+                              style: TextButton.styleFrom(foregroundColor: Colors.green),
+                              child: const Icon(Icons.sentiment_very_satisfied),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 10),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'How would you rate your level of fatigue?',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () => _onFatigue(4),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                          ),
-                          child: const Icon(Icons.sentiment_dissatisfied),
-                        ),
-                        TextButton(
-                          onPressed: () => _onFatigue(3),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.orange,
-                          ),
-                          child: const Icon(Icons.sentiment_neutral),
-                        ),
-                        TextButton(
-                          onPressed: () => _onFatigue(2),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.amber,
-                          ),
-                          child: const Icon(Icons.sentiment_satisfied),
-                        ),
-                        TextButton(
-                          onPressed: () => _onFatigue(1),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.green,
-                          ),
-                          child: const Icon(Icons.sentiment_very_satisfied),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
                   ],
                 ),
               ),
-
               const SizedBox(height: 8),
 
               SizedBox(
@@ -307,7 +274,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 height: 54,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: provider.shiftClosedByEmergency ? darkRed : kGreen,
+                    backgroundColor: iconColorDark,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
