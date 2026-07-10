@@ -402,7 +402,7 @@ class PossibleShiftProvider extends ChangeNotifier {
           }
 
           for (final activity in activities) {
-            if (activity.activityName == 'Bici' && activity.distanceKm > 0.01) {
+            if (activity.activityName == 'Bici' && activity.distanceKm > 2.0) {
               final shift = _buildShift(
                 activity,
                 possibleShifts.length + candidates.length,
