@@ -20,11 +20,29 @@ class Afterdelivery extends StatelessWidget {
 
     final shift = provider.lastCompletedShift;
     final activity = shift?.activity;
+
     final int batteryAfter = provider.currentBattery.batteryLevel;
     final int realBatteryReduction = provider.lastRealBatteryReduction;
+
     final int batteryBefore =
-        (batteryAfter + realBatteryReduction).clamp(0, provider.currentBattery.maxLevel);
+        (batteryAfter + realBatteryReduction).clamp(
+      0,
+      provider.currentBattery.maxLevel,
+    );
+
     final double battery = batteryAfter / 100.0;
+
+    final String estimatedEffortLabel = realBatteryReduction <= 10
+        ? 'Low effort'
+        : realBatteryReduction < 25
+            ? 'Moderate effort'
+            : 'High effort';
+
+    final Color estimatedEffortColor = realBatteryReduction <= 10
+        ? Colors.green
+        : realBatteryReduction < 25
+            ? Colors.orange
+            : Colors.red;
 
     return Scaffold(
       backgroundColor: kGreenLight,
@@ -92,7 +110,9 @@ class Afterdelivery extends StatelessWidget {
                               _stat(
                                 'Elevation',
                                 'm',
-                                (activity.elevationGain ?? 0).round().toString(),
+                                (activity.elevationGain ?? 0)
+                                    .round()
+                                    .toString(),
                               ),
                             ],
                           ),
@@ -101,7 +121,9 @@ class Afterdelivery extends StatelessWidget {
                               _stat(
                                 'Avg HR',
                                 'bpm',
-                                (activity.averageHeartRate ?? 0).round().toString(),
+                                (activity.averageHeartRate ?? 0)
+                                    .round()
+                                    .toString(),
                               ),
                               const Spacer(),
                               _stat(
@@ -111,23 +133,28 @@ class Afterdelivery extends StatelessWidget {
                               ),
                             ],
                           ),
+
                           const Divider(),
+
                           _info(
                             Icons.fitness_center,
                             'Effort',
-                            shift!.effortLabel,
+                            estimatedEffortLabel,
+                            valueColor: estimatedEffortColor,
                           ),
                           _info(
                             Icons.stars,
                             'Points Earned',
-                            '+${shift.points} pts',
+                            '+${shift!.points} pts',
                           ),
                           _info(
                             Icons.attach_money,
                             'Money Earned',
                             '€${shift.earning.toStringAsFixed(2)}',
                           ),
+
                           const Divider(),
+
                           _info(
                             Icons.battery_std,
                             'Battery before delivery',
@@ -148,6 +175,7 @@ class Afterdelivery extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
+
               const Text(
                 'Energy level',
                 style: TextStyle(
@@ -158,32 +186,36 @@ class Afterdelivery extends StatelessWidget {
               ),
 
               const SizedBox(height: 8),
+
               _card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _batteryHistoryBar(
                       batteryHistory: provider.batteryHistory,
-                      batteryReductionHistory: provider.batteryReductionHistory,
+                      batteryReductionHistory:
+                          provider.batteryReductionHistory,
                     ),
-                  const SizedBox(height: 1),
-                  Center(
-                    child: Text(
-                      '${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"} · ${(battery * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: battery <= 0.25
-                        ? Colors.red
-                        : battery < 0.7
-                        ? Colors.orange
-                        : Colors.green,
+
+                    const SizedBox(height: 1),
+
+                    Center(
+                      child: Text(
+                        '${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"} · ${(battery * 100).round()}%',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: battery <= 0.25
+                              ? Colors.red
+                              : battery < 0.7
+                                  ? Colors.orange
+                                  : Colors.green,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
               const SizedBox(height: 20),
 
@@ -219,7 +251,9 @@ class Afterdelivery extends StatelessWidget {
                   ),
                   onPressed: () => Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const HomePage()),
+                    MaterialPageRoute(
+                      builder: (_) => const HomePage(),
+                    ),
                     (r) => false,
                   ),
                   icon: const Icon(Icons.home),
@@ -273,7 +307,13 @@ class Afterdelivery extends StatelessWidget {
         ),
       );
 
-  static Widget _info(IconData icon, String title, String value) => Padding(
+  static Widget _info(
+    IconData icon,
+    String title,
+    String value, {
+    Color valueColor = Colors.black,
+  }) =>
+      Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
@@ -287,6 +327,12 @@ class Afterdelivery extends StatelessWidget {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: valueColor,
+                  fontWeight: valueColor == Colors.black
+                      ? FontWeight.normal
+                      : FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -294,91 +340,93 @@ class Afterdelivery extends StatelessWidget {
       );
 
   static Widget _batteryHistoryBar({
-  required List<int> batteryHistory,
-  required List<int> batteryReductionHistory,
-}) {
-  final int currentBattery =
-      batteryHistory.isNotEmpty ? batteryHistory.last : 0;
+    required List<int> batteryHistory,
+    required List<int> batteryReductionHistory,
+  }) {
+    final int currentBattery =
+        batteryHistory.isNotEmpty ? batteryHistory.last : 0;
 
-  final double battery = currentBattery / 100.0;
+    final double battery = currentBattery / 100.0;
 
-  return SizedBox(
-    height: 120,
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final double barWidth = constraints.maxWidth;
+    return SizedBox(
+      height: 120,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double barWidth = constraints.maxWidth;
 
-        return Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 52,
-              child: Container(
-                height: 22,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: 0,
-              top: 52,
-              child: Container(
-                height: 22,
-                width: barWidth * battery.clamp(0.0, 1.0),
-                decoration: BoxDecoration(
-                  color: battery <= 0.25
-                      ? Colors.red
-                      : battery < 0.7
-                          ? Colors.orange
-                          : Colors.green,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-
-            for (int i = 0; i < batteryReductionHistory.length; i++)
-              if (i + 1 < batteryHistory.length)
-                Positioned(
-                  left: (barWidth *
-                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
-                      1.5,
-                  top: 46,
-                  child: Container(
-                    width: 3,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+          return Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 52,
+                child: Container(
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
+              ),
 
-            for (int i = 0; i < batteryReductionHistory.length; i++)
-              if (i + 1 < batteryHistory.length)
-                Positioned(
-                  left: (barWidth *
-                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
-                      18,
-                  top: i.isEven ? 16 : 84,
-                  child: Text(
-                    '-${batteryReductionHistory[i]}%',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Positioned(
+                left: 0,
+                top: 52,
+                child: Container(
+                  height: 22,
+                  width: barWidth * battery.clamp(0.0, 1.0),
+                  decoration: BoxDecoration(
+                    color: battery <= 0.25
+                        ? Colors.red
+                        : battery < 0.7
+                            ? Colors.orange
+                            : Colors.green,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-          ],
-        );
-      },
-    ),
-  );
-}
+              ),
+
+              for (int i = 0; i < batteryReductionHistory.length; i++)
+                if (i + 1 < batteryHistory.length)
+                  Positioned(
+                    left: (barWidth *
+                            (batteryHistory[i + 1] / 100.0)
+                                .clamp(0.0, 1.0)) -
+                        1.5,
+                    top: 46,
+                    child: Container(
+                      width: 3,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+
+              for (int i = 0; i < batteryReductionHistory.length; i++)
+                if (i + 1 < batteryHistory.length)
+                  Positioned(
+                    left: (barWidth *
+                            (batteryHistory[i + 1] / 100.0)
+                                .clamp(0.0, 1.0)) -
+                        18,
+                    top: i.isEven ? 16 : 84,
+                    child: Text(
+                      '-${batteryReductionHistory[i]}%',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   static Widget _hrZonesChart(List<HeartRateZone> zones) {
     final maxMinutes = zones

@@ -390,12 +390,12 @@ class _HomePageState extends State<HomePage> {
       );
 
   Widget _deliveryCard(BuildContext context, PossibleShift shift, int index) {
-    final String estimatedEffortLabel = shift.estimatedBatteryReduction < 10
+    final String estimatedEffortLabel = shift.estimatedBatteryReduction <= 10
         ? 'Low effort'
         : shift.estimatedBatteryReduction < 25
             ? 'Moderate effort'
             : 'High effort';
-    final Color estimatedEffortColor = shift.estimatedBatteryReduction < 10
+    final Color estimatedEffortColor = shift.estimatedBatteryReduction <= 10
         ? Colors.green
         : shift.estimatedBatteryReduction < 25
             ? Colors.orange

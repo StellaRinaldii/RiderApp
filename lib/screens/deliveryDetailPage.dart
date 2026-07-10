@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:workers_campe/models/possible_shift.dart';
 import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
-
+import 'package:workers_campe/screens/homepage.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
@@ -18,30 +18,11 @@ class DeliveryDetailPage extends StatelessWidget {
     required this.deliveryIndex,
   });
 
-String get _routeImage {
-  final km = possibleShift.activity.distanceKm;
-  final imageNumber = deliveryIndex % 2 + 1;
-
-  if (km <= 20.0) {
-    return 'assets/routes/short/route_$imageNumber.png';
-  }
-
-  if (km <= 60.0) {
-    return 'assets/routes/medium/route_$imageNumber.png';
-  }
-
-  return 'assets/routes/long/route_$imageNumber.png';
-}
-
-  Color get _effortColor {
-    switch (possibleShift.effortType) {
-      case EffortType.low:
-        return Colors.green;
-      case EffortType.moderate:
-        return Colors.orange;
-      case EffortType.high:
-        return Colors.red;
-    }
+  String get _routeImage {
+    final km = possibleShift.activity.distanceKm;
+    if (km <= 2.0) return 'assets/routes/short/route_1.png';
+    if (km <= 5.0) return 'assets/routes/medium/route_1.png';
+    return 'assets/routes/long/route_1.png';
   }
 
   @override
@@ -57,6 +38,18 @@ String get _routeImage {
     final int estimatedBatteryAfter =
         (currentBattery.batteryLevel - shift.estimatedBatteryReduction)
             .clamp(0, currentBattery.maxLevel);
+
+    final String estimatedEffortLabel = shift.estimatedBatteryReduction <= 10
+        ? 'Low effort'
+        : shift.estimatedBatteryReduction < 25
+            ? 'Moderate effort'
+            : 'High effort';
+
+    final Color estimatedEffortColor = shift.estimatedBatteryReduction <= 10
+        ? Colors.green
+        : shift.estimatedBatteryReduction < 25
+            ? Colors.orange
+            : Colors.red;
 
     return Scaffold(
       backgroundColor: kGreenLight,
@@ -122,9 +115,9 @@ String get _routeImage {
                   ),
                   _row(
                     Icons.fitness_center,
-                    'Effort',
-                    shift.effortLabel,
-                    valueColor: _effortColor,
+                    'Estimated effort',
+                    estimatedEffortLabel,
+                    valueColor: estimatedEffortColor,
                   ),
                   _row(
                     Icons.stars,
@@ -134,7 +127,7 @@ String get _routeImage {
                   _row(
                     Icons.battery_alert,
                     'Estimated battery reduction',
-                    '-${shift.estimatedBatteryReduction}%',
+                    '${shift.estimatedBatteryReduction}%',
                   ),
                   _row(
                     Icons.battery_charging_full,
@@ -167,8 +160,13 @@ String get _routeImage {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () {
-                      Provider.of<PossibleShiftProvider>(context,listen: false).rejectShift(shift);
-                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HomePage(),
+                        ),
+                        (route) => false,
+                      );
                     },
                     child: const Text('NO'),
                   ),
@@ -227,7 +225,12 @@ String get _routeImage {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
-                style: TextStyle(color: valueColor),
+                style: TextStyle(
+                  color: valueColor,
+                  fontWeight: valueColor == Colors.black
+                      ? FontWeight.normal
+                      : FontWeight.bold,
+                ),
               ),
             ),
           ],
