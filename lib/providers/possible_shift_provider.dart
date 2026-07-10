@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
+  static const int _seasonWeeks = 42;
   static const int _maxProposals = 3;
   static const int restThreshold = 20;
 
@@ -26,7 +27,7 @@ class PossibleShiftProvider extends ChangeNotifier {
   double totalCalories = 0.0;
   bool shiftClosedByEmergency = false;
   bool shiftClosedByLowBattery = false;
-  var currentBattery = Battery();
+  Battery currentBattery = Battery();
 
   // real battery reduction of the last completed delivery (computed with
   // real HR data), and the future sleep-recovery gain, updated elsewhere.
@@ -272,7 +273,8 @@ class PossibleShiftProvider extends ChangeNotifier {
     totalCalories += shift.activity.calories ?? 0;
 
     final int age = _age ?? 30;
-    final int hrex = shift.activity.averageHeartRate!.round();
+    final int hrex = (shift.activity.averageHeartRate ??
+            currentBattery.estimateExerciseHeartRate(_fitnessLevel ?? 'Beginner')).round();
     final int exerciseMinutes = _exerciseMinutes(shift.activity);
 
     // Try to get the resting HR of the day of the delivery; if not
@@ -382,8 +384,9 @@ class PossibleShiftProvider extends ChangeNotifier {
 
         // collect a small pool of compatible candidates, so that they can
         // be ranked by points before picking the best ones.
-        while (candidates.length < neededCount * 3 && checked < 52) {
-          final start = _baseDate.add(Duration(days: _weekOffset * 7));
+        while (candidates.length < neededCount * 3 && checked < _seasonWeeks) {
+          final int effectiveOffset = _weekOffset % _seasonWeeks;
+          final start = _baseDate.add(Duration(days: effectiveOffset * 7));
           final end = start.add(const Duration(days: 6));
           _weekOffset++;
           checked++;

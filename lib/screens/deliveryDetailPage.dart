@@ -18,12 +18,20 @@ class DeliveryDetailPage extends StatelessWidget {
     required this.deliveryIndex,
   });
 
-  String get _routeImage {
-    final km = possibleShift.activity.distanceKm;
-    if (km <= 2.0) return 'assets/routes/short/route_1.png';
-    if (km <= 5.0) return 'assets/routes/medium/route_1.png';
-    return 'assets/routes/long/route_1.png';
+String get _routeImage {
+  final km = possibleShift.activity.distanceKm;
+  final imageNumber = deliveryIndex % 2 + 1;
+
+  if (km <= 20.0) {
+    return 'assets/routes/short/route_$imageNumber.png';
   }
+
+  if (km <= 60.0) {
+    return 'assets/routes/medium/route_$imageNumber.png';
+  }
+
+  return 'assets/routes/long/route_$imageNumber.png';
+}
 
   Color get _effortColor {
     switch (possibleShift.effortType) {
@@ -159,13 +167,8 @@ class DeliveryDetailPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
+                      Provider.of<PossibleShiftProvider>(context,listen: false).rejectShift(shift);
+                      Navigator.pop(context);
                     },
                     child: const Text('NO'),
                   ),

@@ -472,7 +472,7 @@ class _HomePageState extends State<HomePage> {
             listen: false,
           ).selectPossibleShift(shift);
 
-          Navigator.pushReplacement(
+          Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => DeliveryDetailPage(
