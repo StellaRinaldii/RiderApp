@@ -96,6 +96,15 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Energy level',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: kGreen,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 _energyCard(provider),
                 const SizedBox(height: 30),
                 const Text(
@@ -304,63 +313,58 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _energyCard(PossibleShiftProvider provider) {
-    final double battery = provider.currentBattery.batteryLevel / 100.0;
+  final double battery = provider.currentBattery.batteryLevel / 100.0;
 
-    return Card(
-      color: Colors.white,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Energy level',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: kGreen,
-              ),
+  return Card(
+    color: Colors.white,
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 10),
+
+          Container(
+            height: 18,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(height: 12),
-            Container(
-              height: 18,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: battery.clamp(0.0, 1.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: battery <= 0.25
-                        ? Colors.red
-                        : battery < 0.7
-                            ? Colors.yellow
-                            : Colors.green,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: battery.clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: battery <= 0.25
+                      ? Colors.red
+                      : battery < 0.7
+                          ? Colors.orange
+                          : Colors.green,
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              '${(battery * 100).round()}% - ${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+          ),
+
+          const SizedBox(height: 10),
+
+          Text(
+            '${(battery * 100).round()}% - ${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _msgCard(String msg, IconData icon) => Card(
         color: Colors.white,
@@ -386,11 +390,16 @@ class _HomePageState extends State<HomePage> {
       );
 
   Widget _deliveryCard(BuildContext context, PossibleShift shift, int index) {
-    final effortColor = shift.effortType == EffortType.high
-        ? Colors.red
-        : shift.effortType == EffortType.low
-            ? Colors.green
-            : Colors.orange;
+    final String estimatedEffortLabel = shift.estimatedBatteryReduction < 10
+        ? 'Low effort'
+        : shift.estimatedBatteryReduction < 25
+            ? 'Moderate effort'
+            : 'High effort';
+    final Color estimatedEffortColor = shift.estimatedBatteryReduction < 10
+        ? Colors.green
+        : shift.estimatedBatteryReduction < 25
+            ? Colors.orange
+            : Colors.red;
 
     return Card(
       color: Colors.white,
@@ -419,23 +428,23 @@ class _HomePageState extends State<HomePage> {
               ),
               Text('Estimated time: ${shift.activity.durationMinutes} min'),
               Text('Earning: €${shift.earning.toStringAsFixed(2)}'),
-              Text('Battery reduction: -${shift.estimatedBatteryReduction}%'),
+              Text('Estimated Battery reduction: ${shift.estimatedBatteryReduction}%'),
               RichText(
                 text: TextSpan(
                   style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 14,
                   ),
-                  children: [
-                    const TextSpan(text: 'Effort: '),
-                    TextSpan(
-                      text: shift.effortLabel,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: effortColor,
-                      ),
-                    ),
-                  ],
+                children: [
+                  const TextSpan(text: 'Effort: '),
+                TextSpan(
+                  text: estimatedEffortLabel,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: estimatedEffortColor,
+                  ),
+                ),
+                ],
                 ),
               ),
             ],

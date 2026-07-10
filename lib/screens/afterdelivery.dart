@@ -136,7 +136,7 @@ class Afterdelivery extends StatelessWidget {
                           _info(
                             Icons.battery_alert,
                             'Real battery reduction',
-                            '-$realBatteryReduction%',
+                            '$realBatteryReduction%',
                           ),
                           _info(
                             Icons.battery_charging_full,
@@ -148,40 +148,42 @@ class Afterdelivery extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
+              const Text(
+                'Energy level',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: kGreen,
+                ),
+              ),
 
+              const SizedBox(height: 8),
               _card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Energy level',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: kGreen,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
                     _batteryHistoryBar(
                       batteryHistory: provider.batteryHistory,
                       batteryReductionHistory: provider.batteryReductionHistory,
                     ),
-
-                    const SizedBox(height: 10),
-
-                    Text(
-                      '${(battery * 100).round()}% - '
-                      '${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                  const SizedBox(height: 1),
+                  Center(
+                    child: Text(
+                      '${battery <= 0.25 ? "Low energy" : battery < 0.7 ? "Moderate energy" : "High energy"} · ${(battery * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: battery <= 0.25
+                        ? Colors.red
+                        : battery < 0.7
+                        ? Colors.orange
+                        : Colors.green,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
               const SizedBox(height: 20),
 
@@ -292,134 +294,91 @@ class Afterdelivery extends StatelessWidget {
       );
 
   static Widget _batteryHistoryBar({
-    required List<int> batteryHistory,
-    required List<int> batteryReductionHistory,
-  }) {
-    final int currentBattery =
-        batteryHistory.isNotEmpty ? batteryHistory.last : 0;
+  required List<int> batteryHistory,
+  required List<int> batteryReductionHistory,
+}) {
+  final int currentBattery =
+      batteryHistory.isNotEmpty ? batteryHistory.last : 0;
 
-    final double battery = currentBattery / 100.0;
+  final double battery = currentBattery / 100.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 140,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double barWidth = constraints.maxWidth;
+  return SizedBox(
+    height: 120,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final double barWidth = constraints.maxWidth;
 
-              return Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 48,
-                    child: Container(
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-
-                  Positioned(
-                    left: 0,
-                    top: 48,
-                    child: Container(
-                      height: 18,
-                      width: barWidth * battery.clamp(0.0, 1.0),
-                      decoration: BoxDecoration(
-                        color: battery <= 0.25
-                            ? Colors.red
-                            : battery < 0.7
-                                ? Colors.yellow
-                                : Colors.green,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-
-                  for (int i = 0; i < batteryReductionHistory.length; i++)
-                    if (i + 1 < batteryHistory.length)
-                      Positioned(
-                        left: (barWidth *
-                                (batteryHistory[i + 1] / 100.0)
-                                    .clamp(0.0, 1.0)) -
-                            18,
-                        top: i.isEven ? 0 : 78,
-                        child: Column(
-                          children: i.isEven
-                              ? [
-                                  Text(
-                                    '-${batteryReductionHistory[i]}%',
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_drop_down,
-                                    color: Colors.red,
-                                    size: 24,
-                                  ),
-                                  Text(
-                                    'D${i + 1}',
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ]
-                              : [
-                                  Text(
-                                    'D${i + 1}',
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_drop_up,
-                                    color: Colors.red,
-                                    size: 24,
-                                  ),
-                                  Text(
-                                    '-${batteryReductionHistory[i]}%',
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                        ),
-                      ),
-                ],
-              );
-            },
-          ),
-        ),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        return Stack(
           children: [
-            Text(
-              '$currentBattery%',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black54,
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 52,
+              child: Container(
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
+
+            Positioned(
+              left: 0,
+              top: 52,
+              child: Container(
+                height: 22,
+                width: barWidth * battery.clamp(0.0, 1.0),
+                decoration: BoxDecoration(
+                  color: battery <= 0.25
+                      ? Colors.red
+                      : battery < 0.7
+                          ? Colors.orange
+                          : Colors.green,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+
+            for (int i = 0; i < batteryReductionHistory.length; i++)
+              if (i + 1 < batteryHistory.length)
+                Positioned(
+                  left: (barWidth *
+                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
+                      1.5,
+                  top: 46,
+                  child: Container(
+                    width: 3,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+
+            for (int i = 0; i < batteryReductionHistory.length; i++)
+              if (i + 1 < batteryHistory.length)
+                Positioned(
+                  left: (barWidth *
+                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
+                      18,
+                  top: i.isEven ? 16 : 84,
+                  child: Text(
+                    '-${batteryReductionHistory[i]}%',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
           ],
-        ),
-      ],
-    );
-  }
+        );
+      },
+    ),
+  );
+}
 
   static Widget _hrZonesChart(List<HeartRateZone> zones) {
     final maxMinutes = zones
