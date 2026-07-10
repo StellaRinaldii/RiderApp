@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 
@@ -35,14 +36,25 @@ class _ProfilePageState extends State<Profilepage> {
   String agency = '';
   bool flag = false ;
 
+  // controllore per i confetti quando viene raggiunto un premio:
+  late ConfettiController _controller;
   // carichiamo possibili immagini profilo salvate nelle sp:
   // load possible profile images saved in the shared preference
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    _controller = ConfettiController(duration: Duration(seconds: 4));
+    _controller.play();
   }
-  
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     
@@ -64,13 +76,34 @@ class _ProfilePageState extends State<Profilepage> {
             children: 
             <Widget>[
               const SizedBox(height: 10),
-              CircleAvatar(
-                radius: 60, 
-                backgroundImage: _webImage != null
-                    ? MemoryImage(_webImage!) // 1. Nuova foto appena scelta
-                    : (_savedImageBytes != null
-                        ? MemoryImage(_savedImageBytes!) // 2. Vecchia foto caricata all'avvio
-                        : const AssetImage('assets/profilepage/profilepic.png')), // 3. Default
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 60, 
+                    backgroundImage: _webImage != null
+                        ? MemoryImage(_webImage!) 
+                        : (_savedImageBytes != null
+                            ? MemoryImage(_savedImageBytes!) 
+                            : const AssetImage('assets/profilepage/profilepic.png')), 
+                  ),
+                  // positioning an icon button such that we can modify the profile picture
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: kGreen, 
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        onPressed: () {
+                          _pickImage();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 1),
               SizedBox( width: 200, 
@@ -110,16 +143,6 @@ class _ProfilePageState extends State<Profilepage> {
                                             SizedBox(height: 5,),
                                            _getInfoText(context, 'agency', agency, 'Insert the name of your Agency'),
                                             SizedBox(height: 10,),
-
-                                            // button to modify the profile picture:
-                                            ElevatedButton (
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: kGreen, // Colore di sfondo
-                                                foregroundColor: kGreenLight, // Colore del testo/icona
-                                              ),
-                                              onPressed: _pickImage,
-                                              child: const Text("Modify Profile Picture")
-                                            )
                                           ],
                                         ),
                                         actions: [

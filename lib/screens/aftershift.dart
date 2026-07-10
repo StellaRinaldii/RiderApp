@@ -6,6 +6,8 @@ import 'package:workers_campe/screens/homepage.dart';
 
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
+const Color darkRed = Color(0xFFC1121F);
+const Color lightRed = Color.fromARGB(255, 229, 115, 122);
 
 Future<void> saveSP(String key, int value) async {
   final sp = await SharedPreferences.getInstance();
@@ -23,34 +25,28 @@ class _AftershiftpageState extends State<Aftershiftpage> {
   bool _injuryAnswered = false;
   bool _fatigueAnswered = false;
 
-  void _onInjuryYes() {
-    setState(() => _injuryAnswered = true);
-  }
-
-  void _onInjuryNo() {
-    setState(() => _injuryAnswered = true);
-    ScaffoldMessenger.of(context)
-      ..removeCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        content: Text('Redirecting Injuries to Occupational Health Physician'),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 4),
-      ));
-  }
-
   void _onFatigue(int level) {
+    // chose the color based on the level:
+    Color levcol =  Colors.green;
+    if (level == 4){
+       levcol = Colors.red;
+    } else if (level == 3){
+       levcol = Colors.orange;
+    } else if (level == 2){
+       levcol = Colors.amber;
+    } 
     setState(() => _fatigueAnswered = true);
     saveSP('fatigueLevel', level);
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text('Chosen fatigue level: $level'),
-        backgroundColor: const Color.fromARGB(255, 171, 199, 138),
+        backgroundColor: levcol,
         duration: const Duration(seconds: 4),
       ));
   }
 
-  void _onReturn() {
+   void _onReturn() {
     if (_injuryAnswered && _fatigueAnswered) {
       context.read<PossibleShiftProvider>().resetShiftSummary();
       Navigator.pushAndRemoveUntil(
@@ -72,20 +68,22 @@ class _AftershiftpageState extends State<Aftershiftpage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PossibleShiftProvider>();
-
+    Color iconColorDark =  provider.shiftClosedByEmergency ? darkRed : kGreen;
+    Color iconColorLight = provider.shiftClosedByEmergency ? lightRed : kGreenLight;
     return Scaffold(
-      backgroundColor: kGreenLight,
-      body: SafeArea(
+      backgroundColor: iconColorLight,
+      body: SingleChildScrollView(
+        child: SafeArea(
         child: Container(
           margin: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const Text(
+              Text(
                 'SHIFT ENDED!',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: kGreen,
+                  color: provider.shiftClosedByEmergency ? Colors.white : kGreen,
                 ),
               ),
 
@@ -109,7 +107,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 ),
               ],
 
-              const Spacer(),
+              const SizedBox(height: 5),
 
               Container(
                 padding: const EdgeInsets.all(18),
@@ -127,21 +125,21 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                     ),
                     const SizedBox(height: 5),
                     _row(Icons.local_activity, 'Deliveries completed',
-                        provider.completedDeliveries.toString()),
+                        provider.completedDeliveries.toString(),iconColorDark),
                     _row(Icons.monetization_on, 'Earnings',
-                        '€${provider.totalEarnings.toStringAsFixed(2)}'),
-                    _row(Icons.stars, 'Points', provider.totalPoints.toString()),
+                        '€${provider.totalEarnings.toStringAsFixed(2)}', iconColorDark),
+                    _row(Icons.stars, 'Points', provider.totalPoints.toString(), iconColorDark),
                     _row(Icons.route, 'Distance',
-                        '${provider.totalDistanceKm.toStringAsFixed(2)} km'),
+                        '${provider.totalDistanceKm.toStringAsFixed(2)} km', iconColorDark),
                     _row(Icons.timer, 'Total time',
-                        '${provider.totalDurationMinutes} min'),
+                        '${provider.totalDurationMinutes} min', iconColorDark),
                     _row(Icons.local_fire_department, 'Calories',
-                        '${provider.totalCalories.round()} kcal'),
+                        '${provider.totalCalories.round()} kcal', iconColorDark),
                   ],
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 5),
 
               Card(
                 color: Colors.white,
@@ -151,36 +149,12 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Were you completely free of injuries?',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: _onInjuryYes,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _injuryAnswered
-                                    ? Colors.green.shade200
-                                    : Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Icon(Icons.check),
-                            ),
-                            const SizedBox(width: 30),
-                            ElevatedButton(
-                              onPressed: _onInjuryNo,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.deepOrangeAccent,
-                              ),
-                              child: const Icon(Icons.cancel),
-                            ),
-                          ],
-                        ),
+                         const SizedBox(height: 10),
+                        if (provider.shiftClosedByEmergency)
+                          _injuryDelivery()
+                        else
+                          _noInjuryDelivery(),
+
                         const SizedBox(height: 10),
                         const Text(
                           'How would you rate your level of fatigue?',
@@ -224,7 +198,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 height: 54,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreen,
+                    backgroundColor: iconColorDark,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -242,15 +216,17 @@ class _AftershiftpageState extends State<Aftershiftpage> {
           ),
         ),
       ),
+    )
     );
   }
 
-  Widget _row(IconData icon, String title, String value) {
+  Widget _row(IconData icon, String title, String value, Color coloricon) {
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: kGreen),
+          Icon(icon, color: coloricon),
           const SizedBox(width: 12),
           Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
           Expanded(child: Text(value, textAlign: TextAlign.right)),
@@ -258,4 +234,111 @@ class _AftershiftpageState extends State<Aftershiftpage> {
       ),
     );
   }
+
+  Widget _noInjuryDelivery(){
+    return Column(
+      children: [
+        const Text(
+        'Did you have any problems during the shift?',
+        style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+        ElevatedButton(
+        onPressed: _onProblemYes,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _injuryAnswered
+              ? Colors.green.shade200
+              : Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        child: const Icon(Icons.check),
+        ),
+        const SizedBox(width: 30),
+        ElevatedButton(
+        onPressed: _onProblemNo,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.deepOrangeAccent,
+        ),
+        child: const Icon(Icons.cancel),
+        ),
+        ],
+      )
+    ],);
+  }
+
+  Widget _injuryDelivery(){
+    final TextEditingController problemController = TextEditingController();
+    return Column(
+      children: [
+        const Text('Describe Your Injury:'),
+        const SizedBox(height: 10), // Spazio tra testo e input
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0), // Bordo interno di 32 pixel a destra e sinistra
+          child: TextField(
+            controller: problemController,
+            maxLines: 3, 
+            decoration: const InputDecoration(
+              hintText: 'Describe what happened here...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        TextButton(
+            onPressed: _onProblemNo,
+            child: const Text('Submit'),
+          ),
+      ],
+    );
+    
+  }
+
+  void _onProblemNo() {
+    setState(() => _injuryAnswered = true);
+  }
+
+void _onProblemYes() {
+  setState(() => _injuryAnswered = true);
+  final TextEditingController problemController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Describe the problem:'),
+        content: TextField(
+          controller: problemController,
+          maxLines: 10, 
+          decoration: const InputDecoration(
+            hintText: 'Type your issue here...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              String problemDescription = problemController.text;
+              if (problemDescription.trim().isEmpty) {
+                return; 
+              }
+              Navigator.pop(context); 
+            },
+            child: const Text('Submit'),
+            // at the moment we are not interested in saving the data regarding this message.
+          ),
+        ],
+      );
+    },
+  );
+}
+
 }
