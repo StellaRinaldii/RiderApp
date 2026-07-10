@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
+
 const Color kGreen = Color(0xFF639922);
 const Color kGreenLight = Color(0xFFEAF3DE);
 
@@ -92,15 +93,6 @@ class _AftershiftpageState extends State<Aftershiftpage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const Text(
-                'SHIFT ENDED!',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: kGreen,
-                ),
-              ),
-
               if (provider.shiftClosedByEmergency) ...[
                 const SizedBox(height: 8),
                 Container(
@@ -157,13 +149,36 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                 ),
                 child: Column(
                   children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                    const Text(
+                      ' Your Shift Summary',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: kGreen,
                       ),
-                      child: Image.asset('assets/consegna.png'),
                     ),
-                    const SizedBox(height: 5),
+                  
+                  const SizedBox(height: 8),
+                  _batteryHistoryBar(
+                    batteryHistory: provider.batteryHistory,
+                    batteryReductionHistory: provider.batteryReductionHistory,
+                  ),
+                const SizedBox(height: 18),
+                Center(
+                  child: Text(
+                    '${provider.currentBattery.batteryLevel <= 25 ? "Low energy" : provider.currentBattery.batteryLevel < 70 ? "Moderate energy" : "High energy"} · ${provider.currentBattery.batteryLevel}%',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: provider.currentBattery.batteryLevel <= 25
+                      ? Colors.red
+                      : provider.currentBattery.batteryLevel < 70
+                      ? Colors.orange
+                      : Colors.green,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                     _row(
                       Icons.local_activity,
                       'Deliveries completed',
@@ -338,4 +353,90 @@ class _AftershiftpageState extends State<Aftershiftpage> {
       ),
     );
   }
+  static Widget _batteryHistoryBar({
+  required List<int> batteryHistory,
+  required List<int> batteryReductionHistory,
+}) {
+  final int currentBattery =
+      batteryHistory.isNotEmpty ? batteryHistory.last : 0;
+
+  final double battery = currentBattery / 100.0;
+
+  return SizedBox(
+    height: 120,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final double barWidth = constraints.maxWidth;
+
+        return Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 52,
+              child: Container(
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 0,
+              top: 52,
+              child: Container(
+                height: 22,
+                width: barWidth * battery.clamp(0.0, 1.0),
+                decoration: BoxDecoration(
+                  color: battery <= 0.25
+                      ? Colors.red
+                      : battery < 0.7
+                          ? Colors.orange
+                          : Colors.green,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+
+            for (int i = 0; i < batteryReductionHistory.length; i++)
+              if (i + 1 < batteryHistory.length)
+                Positioned(
+                  left: (barWidth *
+                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
+                      1.5,
+                  top: 46,
+                  child: Container(
+                    width: 3,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+
+            for (int i = 0; i < batteryReductionHistory.length; i++)
+              if (i + 1 < batteryHistory.length)
+                Positioned(
+                  left: (barWidth *
+                          (batteryHistory[i + 1] / 100.0).clamp(0.0, 1.0)) -
+                      18,
+                  top: i.isEven ? 16 : 84,
+                  child: Text(
+                    '-${batteryReductionHistory[i]}%',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+          ],
+        );
+      },
+    ),
+  );
+}
 }
