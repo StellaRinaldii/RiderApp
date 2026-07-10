@@ -4,6 +4,7 @@ import '../models/possible_shift.dart';
 import '../services/Impact.dart';
 import '../utils/battery_algorithm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);

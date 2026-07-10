@@ -16,6 +16,7 @@ dependencies:
   provider: 
   fl_chart: ^1.2.0
   image_picker: ^1.0.8
+  confetti: ^0.8.0
   
 
 dev_dependencies:

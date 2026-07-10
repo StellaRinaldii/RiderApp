@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/login.dart';
+import 'package:workers_campe/providers/possible_shift_provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,13 +37,24 @@ class _ProfilePageState extends State<Profilepage> {
   String agency = '';
   bool flag = false;
 
-  // Load possible profile images saved in SharedPreferences.
+  // controllore per i confetti quando viene raggiunto un premio:
+  late ConfettiController _controller;
+  // carichiamo possibili immagini profilo salvate nelle sp:
+  // load possible profile images saved in the shared preference
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    _controller = ConfettiController(duration: Duration(seconds: 4));
+    _controller.play();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,41 +75,52 @@ class _ProfilePageState extends State<Profilepage> {
       body: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          spacing: 5,
-          children: <Widget>[
-            const SizedBox(height: 10),
-
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: _webImage != null
-                  ? MemoryImage(_webImage!)
-                  : (_savedImageBytes != null
-                      ? MemoryImage(_savedImageBytes!)
-                      : const AssetImage('assets/profilepage/profilepic.png')),
-            ),
-
-            const SizedBox(height: 1),
-
-            SizedBox(
-              width: 200,
-              child: Column(
+            spacing: 5,
+            children: 
+            <Widget>[
+              const SizedBox(height: 10),
+              Stack(
                 children: [
-                  FutureBuilder(
-                    future: getSP('name'),
-                    builder: (context, snapshot) {
-                      final name = snapshot.data ?? '';
-                      return Text(
-                        "Hello $name!",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: kGreen,
-                        ),
-                      );
-                    },
+                  CircleAvatar(
+                    radius: 60, 
+                    backgroundImage: _webImage != null
+                        ? MemoryImage(_webImage!) 
+                        : (_savedImageBytes != null
+                            ? MemoryImage(_savedImageBytes!) 
+                            : const AssetImage('assets/profilepage/profilepic.png')), 
                   ),
+                  // positioning an icon button such that we can modify the profile picture
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: kGreen, 
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        onPressed: () {
+                          _pickImage();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 1),
+              SizedBox( width: 200, 
+                        child: Column(
+                          children: [
 
-                  const SizedBox(height: 10),
+                            FutureBuilder(
+                            future: getSP('name'), 
+                            builder: (context, snapshot){
+                              final name = snapshot.data ?? '';
+                              return Text("Hello $name!", style: TextStyle(fontSize:20, fontWeight: FontWeight.bold, color: kGreen),);
+                            }),
+                            
+                            const SizedBox(height: 10),
 
                   ElevatedButton(
                     onPressed: () {
@@ -353,75 +378,61 @@ class _ProfilePageState extends State<Profilepage> {
     );
   }
 
-  // Same thing, but in this case to get an int.
-  Widget _informationRowint(
-    BuildContext context,
-    String titolo,
-    String nomeSP,
-    String munit,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            titolo,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        Expanded(
-          flex: 6,
-          child: FutureBuilder(
-            future: getSPint(nomeSP),
-            builder: (context, snapshot) {
-              final data = snapshot.data ?? -1;
-              if (data < 0) {
-                return const Text("No data available");
-              } else {
-                return Text("$data $munit");
-              }
-            },
-          ),
-        ),
-      ],
-    );
+  // same thing but in this case to get an int
+  Widget _informationRowint(BuildContext context, String titolo, String nomeSP, String munit){
+    return Row(children: [
+      Expanded(
+        flex: 4, 
+        child: Text(titolo, style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      Expanded(
+        flex: 6, 
+        child:FutureBuilder(
+                      future: getSPint(nomeSP), 
+                      builder: (context, snapshot){
+                          final data = snapshot.data ?? -1;
+                            if (data == Null || data < 0){
+                              return Text("No data available");
+                            } else {
+                              return Text("$data $munit");
+                            }
+                          }
+                    ),
+      ),
+    ],);
   }
 
   // Shows personal information saved by the subject.
   Widget _personalInfo(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(width: 50),
-            const Text(
-              "Personal Information:",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: kGreen,
-              ),
-            ),
-            const SizedBox(height: 5),
-            _informationRow(context, "Gender", "gender", ""),
-            const SizedBox(height: 5),
-            _informationRowint(context, "Age", "age", "years old"),
-            const SizedBox(height: 5),
-            _informationRow(context, "Weight", 'weight', "kg"),
-            const SizedBox(height: 5),
-            _informationRow(context, "Height", "height", "cm"),
-            const SizedBox(height: 5),
-            _informationRow(context, "City", "city", ""),
-            const SizedBox(height: 5),
-            _informationRow(context, "Agency", "agency", ""),
-            const SizedBox(height: 5),
-            _informationRow(context, "Physical fitness:", "trainingstat", ""),
-            const SizedBox(height: 5),
-          ],
-        ),
-      ),
-    );
+    return Card( 
+                color: Colors.white, //light,
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const SizedBox(width: 50),
+                      Text("Personal Informations:", style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: kGreen,)
+                        ,),
+                      SizedBox(height: 5),
+                      _informationRow(context, "Gender", "gender", ""),
+                      SizedBox(height: 5),
+                      _informationRow(context, "Weight", 'weight', "kg"),
+                      SizedBox(height: 5),
+                      _informationRow(context, "Height", "height", "cm"),
+                      SizedBox(height: 5),
+                      _informationRow(context, "City", "city", ""),
+                      SizedBox(height: 5),
+                      _informationRow(context, "Agency", "agency", ""),
+                      SizedBox(height: 5),
+                          //_informationRow(context, "Total Km", "gender", ""),
+                          // mancano le informazioni sui Km
+
+                    ],
+                  ),
+                ),
+              );
   }
 
   // Widget to get the information and save it in SharedPreferences.
@@ -446,18 +457,16 @@ class _ProfilePageState extends State<Profilepage> {
     );
   }
 
-  // Widget that shows the prizes available that the subject has gained.
-  Widget _showTrophy(
-    BuildContext context,
-    String description,
-    IconData icona,
-    double soglia,
-  ) {
-    return FutureBuilder(
-      future: getSPdouble('kilometers'),
-      builder: (context, sp) {
-        final distanzainKm = sp.data ?? 0;
-        final bool flag = distanzainKm >= soglia;
+// widget that shows the prizes available that the subject has gained:
+Widget _showTrophy (BuildContext context, String description, IconData icona, double soglia) {
+  // inietto il provider nel widget:
+   return Consumer<PossibleShiftProvider>(
+    builder: (context, provider, child) {
+
+      // salvo la flag dalla condizione del wiget
+       final distanzainKm = provider.totalDistanceKm;
+       // se ho percorso più della soglia, la flag è vera e quindi mostro il premio colorato
+       bool flag = distanzainKm >= soglia;
 
         if (flag) {
           return ElevatedButton(
@@ -506,84 +515,52 @@ class _ProfilePageState extends State<Profilepage> {
     );
   }
 
-  // Widget that shows total earnings, total distance and total points.
-  Widget _showDistance(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              "Total distance travelled:",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            FutureBuilder(
-              future: getSPdouble('kilometers'),
-              builder: (context, sp) {
-                final double value = sp.data ?? 0;
-                return Text(
-                  "${value.toStringAsFixed(2)} km",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-
-            const Text(
-              "Total earnings:",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            FutureBuilder(
-              future: getSPdouble('earnings'),
-              builder: (context, sp) {
-                final double value = sp.data ?? 0;
-                return Text(
-                  "${value.toStringAsFixed(2)} €",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-
-            const Text(
-              "Total points:",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            FutureBuilder(
-              future: getSPint('points'),
-              builder: (context, sp) {
-                final int value = sp.data ?? 0;
-                return Text(
-                  "$value points",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+// widget che mostra i guadagni totali e i km tot percorsi usando il provider
+Widget _showDistance (BuildContext context) {
+  return Card(
+    color: Colors.white, //light,
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  child: Column(
+                      children: [
+                          const Text("Total distance travelled:",
+                              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                          ),
+                          Consumer<PossibleShiftProvider>(
+                            builder: (context, provider, child) {
+                              return Text(
+                                "${provider.totalDistanceKm.toStringAsFixed(2)} km",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
+                          const Text("Total earnings:",
+                              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                          ),
+                          Consumer<PossibleShiftProvider>(
+                          builder: (context, provider, child) {
+                            return Text(
+                              "${provider.totalEarnings.toStringAsFixed(2)} €",
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            );
+                          },
+                        ),
+                        const Text("Total points:",
+                              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                          ),
+                          Consumer<PossibleShiftProvider>(
+                          builder: (context, provider, child) {
+                            return Text(
+                              "${provider.totalPoints.toStringAsFixed(2)} €",
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            );
+                          },
+                        ),
+                      ]
+      )
+    )
+  );
+}
 
   // FUNCTIONS
 
@@ -599,14 +576,12 @@ class _ProfilePageState extends State<Profilepage> {
     return sp.getString(key);
   }
 
-  // Function to get SharedPreferences int values.
-  Future<int?> getSPint(String key) async {
+  Future <int?> getSPint(String key) async{
     final sp = await SharedPreferences.getInstance();
     return sp.getInt(key);
   }
 
-  // Function to get SharedPreferences double values.
-  Future<double?> getSPdouble(String key) async {
+  Future <double?> getSPdouble(String key) async{
     final sp = await SharedPreferences.getInstance();
     return sp.getDouble(key);
   }
