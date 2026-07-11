@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class HeartRateZone {
   final String name;
   final int min;
@@ -28,8 +30,7 @@ class HeartRateZone {
 
 class ExerciseActivity {
   final String activityName;
-  final String date;
-  final String time;
+  final DateTime date;
   final double? averageHeartRate;
   final double? calories;
   final double? distance;
@@ -43,7 +44,6 @@ class ExerciseActivity {
   ExerciseActivity({
     required this.activityName,
     required this.date,
-    required this.time,
     this.averageHeartRate,
     this.calories,
     this.distance,
@@ -58,8 +58,7 @@ class ExerciseActivity {
 
     ExerciseActivity.fromJson(Map<String, dynamic> json, String date)
       : activityName = json['activityName']?.toString() ?? '',
-        date = date,
-        time = json['time']?.toString() ?? '',
+        date = DateFormat('yyyy-MM-dd').parse(date),
         averageHeartRate =
             (json['averageHeartRate'] as num?)?.toDouble(),
         calories = (json['calories'] as num?)?.toDouble(),
@@ -87,7 +86,7 @@ class ExerciseActivity {
 
   @override
   String toString() {
-    return 'ExerciseActivity(activityName: $activityName, date: $date, time: $time, '
+    return 'ExerciseActivity(activityName: $activityName, date: $date,'
         'averageHeartRate: $averageHeartRate, distance: $distance, '
         'distanceUnit: $distanceUnit,';
   }

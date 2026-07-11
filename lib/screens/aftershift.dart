@@ -186,11 +186,6 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                       '€${provider.totalEarnings.toStringAsFixed(2)}', iconColorDark
                     ),
                     _row(
-                      Icons.stars,
-                      'Points',
-                      provider.totalPoints.toString(), iconColorDark,
-                    ),
-                    _row(
                       Icons.route,
                       'Distance',
                       '${provider.totalDistanceKm.toStringAsFixed(2)} km', iconColorDark,

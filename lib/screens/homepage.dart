@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             Text(
-                              '${provider.completedDeliveries} deliveries · ${provider.totalPoints} pts',
+                              '${provider.completedDeliveries} deliveries',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey[600],
@@ -390,16 +390,13 @@ class _HomePageState extends State<HomePage> {
       );
 
   Widget _deliveryCard(BuildContext context, PossibleShift shift, int index) {
-    final String estimatedEffortLabel = shift.estimatedBatteryReduction <= 10
-        ? 'Low effort'
-        : shift.estimatedBatteryReduction < 25
-            ? 'Moderate effort'
-            : 'High effort';
-    final Color estimatedEffortColor = shift.estimatedBatteryReduction <= 10
-        ? Colors.green
-        : shift.estimatedBatteryReduction < 25
-            ? Colors.orange
-            : Colors.red;
+    final String estimatedEffortLabel = shift.effortLabel;
+    final Color estimatedEffortColor = switch (shift.effortType) {
+      EffortType.low => Colors.green,
+      EffortType.moderate => Colors.orange,
+      EffortType.high => Colors.red,
+    };
+
 
     return Card(
       color: Colors.white,

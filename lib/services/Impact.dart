@@ -155,21 +155,33 @@ class Impact {
     print('Calling: $url');
     final response = await http.get(Uri.parse(url), headers: headers);
 
+    print('[HR REST DEBUG] Status code: ${response.statusCode}');
+
     if (response.statusCode != 200) {
+      print('[HR REST DEBUG] Request failed. Body: ${response.body}');
       return null;
     }
+
+    print('[HR REST DEBUG] Raw body: ${response.body}');
 
     final decodedResponse = jsonDecode(response.body);
 
     final dayData = decodedResponse is Map ? decodedResponse['data'] : null;
-    final readings = dayData is Map ? dayData['data'] : null;
 
-    if (readings is! List || readings.isEmpty) {
+    final reading = dayData is Map ? dayData['data'] : null;
+
+    if (reading is! Map || reading.isEmpty) {
+      print('[HR REST DEBUG] Empty readings for this day. dayData: $dayData');
       return null;
     }
-
-    return RestingHeartRate.fromJson(Map<String, dynamic>.from(readings.first));
-
+    
+    try {
+      return RestingHeartRate.fromJson(Map<String, dynamic>.from(reading));
+    } catch (e) {
+      print('[HR REST DEBUG] Parse error: $e. Raw reading: $reading');
+      return null;
+}
+    
   } //fetchRestingHeartRateByDate
 
   // This method fetches the sleep data recorded for a single day.
@@ -198,13 +210,19 @@ class Impact {
     final decodedResponse = jsonDecode(response.body);
 
     final dayData = decodedResponse is Map ? decodedResponse['data'] : null;
-    final readings = dayData is Map ? dayData['data'] : null;
+    final reading = dayData is Map ? dayData['data'] : null;
 
-    if (readings is! List || readings.isEmpty) {
+    if (reading is! Map || reading.isEmpty) {
+       print('[SLEEP DEBUG] Empty readings for this day. dayData: $dayData');
       return null;
     }
 
-    return SleepData.fromJson(Map<String, dynamic>.from(readings.first));
+    try {
+      return SleepData.fromJson(Map<String, dynamic>.from(reading));
+    } catch (e) {
+      print('[SLEEP DEBUG] Parse error: $e. Raw reading: ${reading}');
+      return null;
+    }
 
   } //fetchSleepDataByDate
 }

@@ -3,10 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:workers_campe/models/possible_shift.dart';
 import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/DeliveryInProgressPage.dart';
-import 'package:workers_campe/screens/homepage.dart';
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
 
 class DeliveryDetailPage extends StatelessWidget {
   final PossibleShift possibleShift;
@@ -18,12 +15,20 @@ class DeliveryDetailPage extends StatelessWidget {
     required this.deliveryIndex,
   });
 
-  String get _routeImage {
-    final km = possibleShift.activity.distanceKm;
-    if (km <= 2.0) return 'assets/routes/short/route_1.png';
-    if (km <= 5.0) return 'assets/routes/medium/route_1.png';
-    return 'assets/routes/long/route_1.png';
+String get _routeImage {
+  final km = possibleShift.activity.distanceKm;
+  final imageNumber = deliveryIndex % 3 + 1;
+
+  if (km <= 20.0) {
+    return 'assets/routes/short/route_$imageNumber.png';
   }
+
+  if (km <= 60.0) {
+    return 'assets/routes/medium/route_$imageNumber.png';
+  }
+
+  return 'assets/routes/long/route_$imageNumber.png';
+}
 
   @override
   Widget build(BuildContext context) {
@@ -39,23 +44,21 @@ class DeliveryDetailPage extends StatelessWidget {
         (currentBattery.batteryLevel - shift.estimatedBatteryReduction)
             .clamp(0, currentBattery.maxLevel);
 
-    final String estimatedEffortLabel = shift.estimatedBatteryReduction <= 10
-        ? 'Low effort'
-        : shift.estimatedBatteryReduction < 25
-            ? 'Moderate effort'
-            : 'High effort';
+    final String estimatedEffortLabel = shift.effortLabel;
+    final Color estimatedEffortColor = switch (shift.effortType) {
+      EffortType.low => Colors.green,
+      EffortType.moderate => Colors.orange,
+      EffortType.high => Colors.red,
+    };
+    
+final colorScheme = Theme.of(context).colorScheme;
 
-    final Color estimatedEffortColor = shift.estimatedBatteryReduction <= 10
-        ? Colors.green
-        : shift.estimatedBatteryReduction < 25
-            ? Colors.orange
-            : Colors.red;
 
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: colorScheme.secondary,
       appBar: AppBar(
         title: const Text('Delivery details'),
-        backgroundColor: kGreen,
+        backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -69,10 +72,10 @@ class DeliveryDetailPage extends StatelessWidget {
           children: [
             Text(
               'Delivery #$deliveryIndex',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: kGreen,
+                color: colorScheme.primary,
               ),
             ),
 
@@ -97,42 +100,41 @@ class DeliveryDetailPage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _row(Icons.place, 'Destination', shift.destinationAddress),
+                  _row(Icons.place, 'Destination', shift.destinationAddress,iconColor: colorScheme.primary),
                   _row(
                     Icons.route,
                     'Distance',
-                    '${activity.distanceKm.toStringAsFixed(2)} km',
+                    '${activity.distanceKm.toStringAsFixed(2)} km',iconColor: colorScheme.primary
                   ),
                   _row(
                     Icons.timer,
                     'Estimated time',
-                    '${activity.durationMinutes} min',
+                    '${activity.durationMinutes} min',iconColor: colorScheme.primary
                   ),
                   _row(
                     Icons.attach_money,
                     'Earning',
                     '€${shift.earning.toStringAsFixed(2)}',
+                    iconColor: colorScheme.primary
                   ),
                   _row(
                     Icons.fitness_center,
                     'Estimated effort',
                     estimatedEffortLabel,
                     valueColor: estimatedEffortColor,
-                  ),
-                  _row(
-                    Icons.stars,
-                    'Points',
-                    '+${shift.points} pts',
+                    iconColor: colorScheme.primary
                   ),
                   _row(
                     Icons.battery_alert,
                     'Estimated battery reduction',
                     '${shift.estimatedBatteryReduction}%',
+                    iconColor: colorScheme.primary
                   ),
                   _row(
                     Icons.battery_charging_full,
                     'Estimated battery after delivery',
                     '$estimatedBatteryAfter%',
+                    iconColor: colorScheme.primary
                   ),
                 ],
               ),
@@ -155,18 +157,13 @@ class DeliveryDetailPage extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: kGreen,
-                      side: const BorderSide(color: kGreen),
+                      foregroundColor: colorScheme.primary,
+                      side: BorderSide(color: colorScheme.primary),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
+                      Provider.of<PossibleShiftProvider>(context,listen: false).rejectShift(shift);
+                      Navigator.pop(context);
                     },
                     child: const Text('NO'),
                   ),
@@ -177,7 +174,7 @@ class DeliveryDetailPage extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
+                      backgroundColor: colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -209,13 +206,14 @@ class DeliveryDetailPage extends StatelessWidget {
     IconData icon,
     String title,
     String value, {
+    required Color iconColor,
     Color valueColor = Colors.black,
   }) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, color: kGreen),
+            Icon(icon, color: iconColor),
             const SizedBox(width: 12),
             Text(
               '$title: ',

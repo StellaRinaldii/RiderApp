@@ -69,11 +69,11 @@ class Battery {
   // Advanced ~110 bpm.
   int estimateExerciseHeartRate(String fitnessLevel) {
     if (fitnessLevel == "Intermediate") {
-      return 140;
+      return 160;
     } else if (fitnessLevel == "Advanced") {
-      return 110;
+      return 130;
     }
-    return 160; // beginner (default)
+    return 180; // beginner (default)
   }
 
   // Estimates the battery reduction of a delivery BEFORE it is completed,

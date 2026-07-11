@@ -4,8 +4,6 @@ import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/afterdelivery.dart';
 import 'package:workers_campe/screens/aftershift.dart';
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
 
 class DeliveryInProgressPage extends StatefulWidget {
   const DeliveryInProgressPage({super.key});
@@ -83,10 +81,12 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
   void _showEmergencyDialog(BuildContext context) {
     if (_isCompleting) return;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: kGreenLight,
+        backgroundColor: colorScheme.secondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text(
           'Emergency call',
@@ -128,12 +128,13 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: colorScheme.secondary,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text('Active delivery'),
-        backgroundColor: kGreen,
+        backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -141,13 +142,13 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
         child: Column(
           children: [
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Delivery in progress...',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: kGreen,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 10),
@@ -162,7 +163,7 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: kGreenLight,
+                color: colorScheme.secondary,
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Image.asset(
@@ -188,7 +189,7 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.navigation, color: kGreen, size: 36),
+                  Icon(Icons.navigation, color: colorScheme.primary, size: 36),
                   const SizedBox(height: 10),
                   Text(
                     _isCompleting
@@ -235,7 +236,7 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
               height: 54,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreen,
+                  backgroundColor: colorScheme.primary,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey,
                   disabledForegroundColor: Colors.white,

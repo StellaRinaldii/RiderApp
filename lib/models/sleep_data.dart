@@ -1,5 +1,4 @@
 class SleepData {
-  // This class models the sleep data needed by the battery algorithm.
   final int duration;
   final int efficiency;
 

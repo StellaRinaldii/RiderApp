@@ -1,5 +1,4 @@
 class RestingHeartRate {
-  // This class models the resting heart rate value needed by the battery algorithm.
   final int value;
 
   RestingHeartRate({required this.value});

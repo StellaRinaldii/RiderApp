@@ -4,7 +4,7 @@ import '../models/possible_shift.dart';
 import '../services/Impact.dart';
 import '../utils/battery_algorithm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
@@ -21,7 +21,6 @@ class PossibleShiftProvider extends ChangeNotifier {
   PossibleShift? lastCompletedShift;
 
   int completedDeliveries = 0;
-  int totalPoints = 0;
   double totalEarnings = 0.0;
   double totalDistanceKm = 0.0;
   int totalDurationMinutes = 0;
@@ -55,14 +54,21 @@ class PossibleShiftProvider extends ChangeNotifier {
   String? _fitnessLevel;
   String? _sex;
 
+  late final Future<void> _batteryLoading;
+
+  PossibleShiftProvider() {
+  _batteryLoading = _loadBatteryLevel();
+  }
+
   Future<void> startShift() async {
+    await _batteryLoading;
+
     if (sleepRecoveryPending) {
       print('[SLEEP] Cannot start a new shift: sleep recovery is still pending.');
       return;
     }
 
     completedDeliveries = 0;
-    totalPoints = 0;
     totalEarnings = 0.0;
     totalDistanceKm = 0.0;
     totalDurationMinutes = 0;
@@ -99,7 +105,6 @@ class PossibleShiftProvider extends ChangeNotifier {
     final bool hadDeliveries = completedDeliveries > 0;
 
     completedDeliveries = 0;
-    totalPoints = 0;
     totalEarnings = 0.0;
     totalDistanceKm = 0.0;
     totalDurationMinutes = 0;
@@ -138,7 +143,7 @@ class PossibleShiftProvider extends ChangeNotifier {
     bool usedRealData = false;
 
     if (lastCompletedShift != null) {
-      final sleepDate = lastCompletedShift!.activity.date;
+      final sleepDate = Impact.formatDate(lastCompletedShift!.activity.date);
       print('[SLEEP] Searching sleep data for date: $sleepDate');
 
       try {
@@ -199,6 +204,8 @@ class PossibleShiftProvider extends ChangeNotifier {
       currentBattery.batteryLevel = currentBattery.maxLevel;
     }
 
+    await _saveBatteryLevel();
+
     lastSleepBatteryGain = adjustedSleepGain;
     sleepRecoveryPending = false;
 
@@ -243,6 +250,22 @@ class PossibleShiftProvider extends ChangeNotifier {
     _sex = sp.getString('gender');
   }
 
+  static const String _batteryKey = 'batteryLevel';
+
+  Future<void> _saveBatteryLevel() async {
+  final sp = await SharedPreferences.getInstance();
+  await sp.setInt(_batteryKey, currentBattery.batteryLevel);
+}
+
+Future<void> _loadBatteryLevel() async {
+  final sp = await SharedPreferences.getInstance();
+  final saved = sp.getInt(_batteryKey);
+  if (saved != null) {
+    currentBattery.batteryLevel = saved;
+  }
+  notifyListeners();
+}
+
   int _exerciseMinutes(ExerciseActivity activity) {
     if (activity.activeDurationMinutes > 0) {
       return activity.activeDurationMinutes;
@@ -267,11 +290,12 @@ class PossibleShiftProvider extends ChangeNotifier {
     final shift = currentPossibleShift!;
 
     completedDeliveries++;
-    totalPoints += shift.points;
     totalEarnings += shift.earning;
     totalDistanceKm += shift.activity.distanceKm;
     totalDurationMinutes += shift.activity.durationMinutes;
     totalCalories += shift.activity.calories ?? 0;
+
+    print('[DEBUG] raw averageHeartRate: ${shift.activity.averageHeartRate}');
 
     final int age = _age ?? 30;
     final int hrex = (shift.activity.averageHeartRate ??
@@ -289,7 +313,7 @@ class PossibleShiftProvider extends ChangeNotifier {
     print('[HR REST] Searching resting HR for date: ${shift.activity.date}');
 
     final restingHeartRate =
-        await Impact.fetchRestingHeartRateByDate(shift.activity.date);
+        await Impact.fetchRestingHeartRateByDate(Impact.formatDate(shift.activity.date));
 
     if (restingHeartRate != null) {
       hrrest = restingHeartRate.value;
@@ -314,6 +338,8 @@ class PossibleShiftProvider extends ChangeNotifier {
 
     currentBattery.batteryloss(lastRealBatteryReduction);
 
+    await _saveBatteryLevel();
+
     batteryReductionHistory.add(lastRealBatteryReduction);
     batteryHistory.add(currentBattery.batteryLevel);
 
@@ -330,15 +356,13 @@ class PossibleShiftProvider extends ChangeNotifier {
     // Saves the cumulative counters in SharedPreferences.
     try {
       final sp = await SharedPreferences.getInstance();
-      int? globalPoints = sp.getInt('points');
+      
       double? globalKm = sp.getDouble('kilometers');
       double? globalEarnings = sp.getDouble('earnings');
 
-      globalPoints = (globalPoints ?? 0) + shift.points;
       globalKm = (globalKm ?? 0) + shift.activity.distanceKm;
       globalEarnings = (globalEarnings ?? 0) + shift.earning;
 
-      await sp.setInt('points', globalPoints);
       await sp.setDouble('kilometers', globalKm);
       await sp.setDouble('earnings', globalEarnings);
     } catch (e) {
@@ -435,14 +459,8 @@ class PossibleShiftProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  PossibleShift _buildShift(ExerciseActivity activity, int index) {
-    final effort = _effort(activity);
+PossibleShift _buildShift(ExerciseActivity activity, int index) {
     final km = double.parse(activity.distanceKm.toStringAsFixed(2));
-    final bonus = effort == EffortType.high ? 80 : effort == EffortType.moderate ? 40 : 15;
-    final points = (km * 10).round() + bonus;
-    final earning = double.parse(
-      (km * 0.50 + bonus / 100).clamp(1.50, 50.0).toStringAsFixed(2),
-    );
     final int exerciseMinutes = _exerciseMinutes(activity);
     final estimation = currentBattery.lossEstimation(
       _age ?? 30,
@@ -450,6 +468,26 @@ class PossibleShiftProvider extends ChangeNotifier {
       exerciseMinutes,
       _sex ?? 'Other',
     );
+
+    final effort = _effort(estimation);
+    final earning = double.parse((km * 0.50).clamp(3.0, 100.0).toStringAsFixed(2),);
+
+    final int headroom = currentBattery.batteryLevel - restThreshold;
+
+    final double relativeCost =
+        (estimation / headroom).clamp(0.0, 1.0).toDouble();
+
+    final double earningFraction =
+        (earning / 100.0).clamp(0.0, 1.0).toDouble();
+
+    // Points: battery-aware convenience score.
+    // Rewards higher earnings and penalizes deliveries that would consume
+    // a large fraction of the battery margin currently available before rest.
+    final int points = (earningFraction * (1.0 - relativeCost) * 1000)
+        .round()
+        .clamp(1, 1000)
+        .toInt();
+
     const addresses = [
       'Via Venezia 10, Padova',
       'Via Roma 20, Padova',
@@ -466,14 +504,10 @@ class PossibleShiftProvider extends ChangeNotifier {
     );
   }
 
-  static EffortType _effort(ExerciseActivity a) {
-    final mins = a.durationMinutes;
-    final km = a.distanceKm;
-    final cal = a.calories ?? 0;
-    final hr = a.averageHeartRate ?? 0;
-    if (mins > 200 || km > 70 || cal > 2000 || hr > 150) return EffortType.high;
-    if (mins < 20 && km < 3 && cal < 200) return EffortType.low;
-    return EffortType.moderate;
+static EffortType _effort(int batteryReduction) {
+    if (batteryReduction <= 10) return EffortType.low;
+    if (batteryReduction < 25) return EffortType.moderate;
+    return EffortType.high;
   }
 
   static String _effortLabel(EffortType e) {
