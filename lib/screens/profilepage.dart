@@ -487,7 +487,7 @@ void dispose() {
           saveSP(nomesp, val);
         });
       },
-      keyboardType: TextInputType.number, 
+      keyboardType: TextInputType.text, 
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         labelText: nomesp,
