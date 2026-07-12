@@ -30,34 +30,28 @@ class PossibleShiftProvider extends ChangeNotifier {
   Battery currentBattery = Battery();
 
   // real battery reduction of the last completed delivery (computed with
-  // real HR data), and the future sleep-recovery gain, updated elsewhere.
+  // real HR data), and the future sleep-recovery gain
   int lastRealBatteryReduction = 0;
   int lastSleepBatteryGain = 0;
 
-  // Battery history during the current shift.
-  // Example:
-  // batteryHistory = [100, 70, 30]
-  // batteryReductionHistory = [30, 40]
   List<int> batteryHistory = [];
   List<int> batteryReductionHistory = [];
 
-  // true right after the user comes back to the Home from the aftershift
-  // screen: the Home will wait ~10 seconds and then apply the sleep
-  // recovery exactly once.
   bool sleepRecoveryPending = false;
 
   int _weekOffset = 0;
 
-  // subject's profile, loaded from SharedPreferences (set during onboarding),
+  // subject's profile loaded from SharedPreferences (set during onboarding),
   // used to estimate the battery reduction of a delivery before it happens.
   int? _age;
   String? _fitnessLevel;
   String? _sex;
 
+ // This Future is used to ensure that the battery level is loaded from SharedPreferences before any shift starts.
   late final Future<void> _batteryLoading;
 
   PossibleShiftProvider() {
-  _batteryLoading = _loadBatteryLevel();
+  _batteryLoading = _loadBatteryLevel(); 
   }
 
   Future<void> startShift() async {
@@ -113,10 +107,6 @@ class PossibleShiftProvider extends ChangeNotifier {
     shiftClosedByEmergency = false;
     shiftClosedByLowBattery = false;
 
-    // NB: lastCompletedShift is intentionally NOT cleared here: it is still
-    // needed right after this call to know which day to use for the sleep
-    // recovery lookup once we are back on the Home. It will be cleared on
-    // the next startShift().
     sleepRecoveryPending = hadDeliveries;
 
     print('[SHIFT] Summary reset. Sleep recovery pending: $sleepRecoveryPending');
@@ -124,18 +114,10 @@ class PossibleShiftProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Applies the sleep recovery once, when called from the Home ~10 seconds
-  // after the user comes back from the aftershift screen. Returns a message
-  // ready to be shown in a SnackBar.
   Future<String> applySleepRecoveryAfterShift() async {
     if (!sleepRecoveryPending) {
       print('[SLEEP] No sleep recovery pending.');
       return 'No sleep recovery pending.';
-    }
-
-    if (shiftStarted) {
-      print('[SLEEP] Recovery skipped because a new shift has already started.');
-      return 'Sleep recovery skipped because a new shift has already started.';
     }
 
     int efficiency = 80;
@@ -168,10 +150,7 @@ class PossibleShiftProvider extends ChangeNotifier {
 
     final int levelBeforeGain = currentBattery.batteryLevel;
 
-    // First compute the theoretical sleep recovery.
-    currentBattery.batterygain(efficiency, durationMinutes);
-
-    final int rawSleepGain = currentBattery.batteryLevel - levelBeforeGain;
+    final int rawSleepGain = currentBattery.computeSleepGain(efficiency, durationMinutes);
 
     // Read the fatigue level selected in Aftershift.
     // fatigueLevel is saved when the user presses one of the fatigue icons.
@@ -293,9 +272,7 @@ Future<void> _loadBatteryLevel() async {
     totalEarnings += shift.earning;
     totalDistanceKm += shift.activity.distanceKm;
     totalDurationMinutes += shift.activity.durationMinutes;
-    totalCalories += shift.activity.calories ?? 0;
-
-    print('[DEBUG] raw averageHeartRate: ${shift.activity.averageHeartRate}');
+    totalCalories += shift.activity.calories ?? 0.0;
 
     final int age = _age ?? 30;
     final int hrex = (shift.activity.averageHeartRate ??

@@ -127,19 +127,12 @@ class Battery {
     return loss.round().clamp(1, 100).toInt();
   }
 
-  // Applies a battery gain (e.g. from sleep recovery) to the current level.
-  void batterygain(int efficiency, double sleeptime) {
-    // efficiency must be a %
-    // sleeptime is in minutes
+  int computeSleepGain(int efficiency, double sleeptime) {
     double sleepHours = sleeptime / 60;
-    double gain = (efficiency * sleepHours / 8);
+    double gain = efficiency * sleepHours / 8;
+    return gain.round();
+}
 
-    // first update the battery level, then clamp it
-    batteryLevel = batteryLevel + gain.toInt();
-    if (batteryLevel > maxLevel) {
-      batteryLevel = maxLevel;
-    }
-  }
 
   // Applies an already-computed battery loss to the current level.
   void batteryloss(int loss) {

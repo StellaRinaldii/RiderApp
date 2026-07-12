@@ -88,6 +88,6 @@ class ExerciseActivity {
   String toString() {
     return 'ExerciseActivity(activityName: $activityName, date: $date,'
         'averageHeartRate: $averageHeartRate, distance: $distance, '
-        'distanceUnit: $distanceUnit,';
+        'distanceUnit: $distanceUnit)';
   }
 }
