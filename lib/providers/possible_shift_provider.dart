@@ -115,6 +115,42 @@ class PossibleShiftProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetAccountState() {
+  shiftStarted = false;
+  isLoading = false;
+  errorMessage = null;
+
+  possibleShifts.clear();
+  currentPossibleShift = null;
+  lastCompletedShift = null;
+
+  completedDeliveries = 0;
+  totalEarnings = 0.0;
+  totalDistanceKm = 0.0;
+  totalDurationMinutes = 0;
+  totalCalories = 0.0;
+
+  shiftClosedByEmergency = false;
+  shiftClosedByLowBattery = false;
+
+  currentBattery = Battery();
+
+  lastRealBatteryReduction = 0;
+  lastSleepBatteryGain = 0;
+
+  batteryHistory.clear();
+  batteryReductionHistory.clear();
+
+  sleepRecoveryPending = false;
+  _weekOffset = 0;
+
+  _age = null;
+  _fitnessLevel = null;
+  _sex = null;
+
+  notifyListeners();
+}
+
   Future<String> applySleepRecoveryAfterShift() async {
     if (!sleepRecoveryPending) {
       print('[SLEEP] No sleep recovery pending.');

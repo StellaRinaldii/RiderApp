@@ -303,7 +303,19 @@ void dispose() {
             // Widget showing total distance, total earnings and total points.
             _showDistance(context),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            
+            OutlinedButton.icon(
+              onPressed: () {
+                _showDeleteAccountDialog(context);
+                },
+                style: ElevatedButton.styleFrom(foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),),
+                icon: const Icon(Icons.delete_forever),
+                label: const Text("Delete account"),),
+                
+                const SizedBox(height: 16),
+            
           ],
         ),
       ),
@@ -375,6 +387,92 @@ void dispose() {
 
 
   // WIDGETS
+
+  Future<void> _showDeleteAccountDialog(BuildContext context) async {
+  final provider = Provider.of<PossibleShiftProvider>(
+    context,
+    listen: false,
+  );
+
+  if (provider.shiftStarted || provider.sleepRecoveryPending) {
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            provider.shiftStarted
+                ? 'You cannot delete the account while a shift is in progress.'
+                : 'You cannot delete the account while recovery is in progress.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+    return;
+  }
+
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text("Delete account",
+        style: TextStyle(color: Colors.red,
+        fontWeight: FontWeight.bold,)),
+        content: const Text(
+          "Are you sure you want to delete your account? "
+          "All locally saved data will be permanently deleted.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop(false);
+            },
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop(true);
+            },
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text("Yes"),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmed == true && context.mounted) {
+    await _deleteAccount(context);
+  }
+}
+
+Future<void> _deleteAccount(BuildContext context) async {
+  final provider = Provider.of<PossibleShiftProvider>(
+    context,
+    listen: false,
+  );
+
+  final sp = await SharedPreferences.getInstance();
+
+  // Deletes tokens, credentials, onboarding information,
+  // profile data, statistics and saved battery level.
+  await sp.clear();
+
+  // Deletes the state still stored in memory.
+  provider.resetAccountState();
+
+  if (!context.mounted) return;
+
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (context) => const LoginPage(),
+    ),
+    (route) => false,
+  );
+}
 
   // Widget to show each String information row from SharedPreferences.
   Widget _informationRow(
@@ -487,7 +585,9 @@ void dispose() {
           saveSP(nomesp, val);
         });
       },
-      keyboardType: TextInputType.text, 
+      keyboardType: nomesp == 'weight' || nomesp == 'height'
+    ? const TextInputType.numberWithOptions(decimal: true)
+    : TextInputType.text,
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         labelText: nomesp,
