@@ -5,8 +5,7 @@ import 'package:workers_campe/screens/onboarding.dart';
 import 'package:workers_campe/services/Impact.dart';
 
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,13 +40,13 @@ class _LoginPageState extends State<LoginPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kGreen, width: 2),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
       ),
       labelText: label,
       labelStyle: const TextStyle(color: Colors.grey),
-      floatingLabelStyle: const TextStyle(color: kGreen),
+      floatingLabelStyle:  TextStyle(color: Theme.of(context).colorScheme.primary,),
       hintText: hint,
-      prefixIcon: Icon(icon, color: kGreen),
+      prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.primary,),
     );
   }
 
@@ -106,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -135,12 +134,12 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 30),
 
-                        const Text(
+                        Text(
                           'Login',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 25,
-                            color: kGreen,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
 
@@ -176,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                             width: 250,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: kGreen,
+                                backgroundColor: Theme.of(context).colorScheme.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 3,
                                 shape: RoundedRectangleBorder(

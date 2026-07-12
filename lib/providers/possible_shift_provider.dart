@@ -4,7 +4,7 @@ import '../models/possible_shift.dart';
 import '../services/Impact.dart';
 import '../utils/battery_algorithm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
@@ -450,6 +450,13 @@ class PossibleShiftProvider extends ChangeNotifier {
       exerciseMinutes,
       _sex ?? 'Other',
     );
+    // Battery loss estimation using the linear model
+    /*final estimation = currentBattery.lossEstimationLinear(
+      _fitnessLevel ?? 'Beginner',
+      exerciseMinutes,
+      _age ?? 30,
+      _sex ?? 'Other',
+    );*/
     const addresses = [
       'Via Venezia 10, Padova',
       'Via Roma 20, Padova',
