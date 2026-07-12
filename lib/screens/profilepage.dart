@@ -9,6 +9,10 @@ import 'package:workers_campe/screens/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:provider/provider.dart';
+import 'package:workers_campe/providers/possible_shift_provider.dart';
+import 'package:intl/intl.dart';
+
 class Profilepage extends StatefulWidget {
   const Profilepage({super.key});
 
@@ -29,6 +33,8 @@ class _ProfilePageState extends State<Profilepage> {
   String weight = '';
   String city = '';
   String agency = '';
+  String dob = '';
+  final TextEditingController _dobController = TextEditingController();
   String trainingfit = '';
   bool flag = false;
 
@@ -41,7 +47,12 @@ class _ProfilePageState extends State<Profilepage> {
     _loadProfileImage();
   }
 
-  
+  @override
+void dispose() {
+  _dobController.dispose();
+  super.dispose();
+}
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -111,7 +122,8 @@ class _ProfilePageState extends State<Profilepage> {
                             const SizedBox(height: 10),
 
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      _dobController.text== 'Date of Birth';
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -143,9 +155,11 @@ class _ProfilePageState extends State<Profilepage> {
                                     'gender', 
                                     gender, 
                                     ['Male', 'Female', 'Other'], 
-                                    "Choose your Sex ", 
+                                    "Sex ", 
                                     Icons.wc_outlined
                                   ),
+                                  const SizedBox(height: 5),
+                                  _getDobField(context),
                                   const SizedBox(height: 5),
                                   _getInfoText(
                                     context,
@@ -184,7 +198,7 @@ class _ProfilePageState extends State<Profilepage> {
                                     "trainingstat", 
                                     trainingfit, 
                                     ['Beginner', 'Intermediate','Advanced'], 
-                                    'Choose your Training Level', 
+                                    'Training Level', 
                                     Icons.directions_run_outlined,
                                     ),
                                 ],
@@ -316,9 +330,41 @@ class _ProfilePageState extends State<Profilepage> {
               },
             ),
             IconButton(
-              icon: Icon(Icons.logout, color: colors.primary),
-              onPressed: () {
-                _toLoginPage(context);
+              icon: Icon(Icons.logout, color: Theme.of(context).colorScheme.primary),
+              onPressed: () async {
+                final provider = Provider.of<PossibleShiftProvider>(
+                  context,
+                  listen: false,
+                );
+
+                if (provider.shiftStarted || provider.sleepRecoveryPending) {
+                  ScaffoldMessenger.of(context)
+                    ..removeCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          provider.shiftStarted
+                              ? 'You cannot logout while a shift is in progress.'
+                              : 'You cannot logout while recovery is in progress.',
+                        ),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+
+                  return;
+                }
+
+                final sp = await SharedPreferences.getInstance();
+                await sp.remove('isUserLogged');
+
+                if (!context.mounted) return;
+
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => const LoginPage(),
+                  ),
+                );
               },
             ),
           ],
@@ -327,14 +373,6 @@ class _ProfilePageState extends State<Profilepage> {
     );
   }
 
-  static void _toLoginPage(BuildContext context) async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    await sharedPreferences.remove('isUserLogged');
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
-  }
 
   // WIDGETS
 
@@ -414,6 +452,8 @@ class _ProfilePageState extends State<Profilepage> {
                       _informationRow(context, "Gender", "gender", ""),
                       SizedBox(height: 5),
                        _informationRowint(context, "Age", "age", "years"),
+                       SizedBox(height: 5),
+                       _informationRow(context, "Date of Birth", "dob", ""),
                       SizedBox(height: 5),
                       _informationRow(context, "Weight", 'weight', "kg"),
                       SizedBox(height: 5),
@@ -465,6 +505,52 @@ class _ProfilePageState extends State<Profilepage> {
   },
   );
   }
+
+  // Widget to pick and display the date of birth.
+Widget _getDobField(BuildContext context) {
+  return TextFormField(
+    controller: _dobController,
+    readOnly: true,
+    decoration: const InputDecoration(
+      border: OutlineInputBorder(),
+      hintText: 'Date of Birth',
+      prefixIcon: Icon(Icons.cake_outlined),
+      suffixIcon: Icon(Icons.calendar_today_outlined),
+    ),
+    validator: (value) {
+      if (value == null || value.trim().isEmpty) {
+        return 'Please pick your date of birth';
+      }
+      return null;
+    },
+    onTap: () => _selectDob(context),
+  );
+}
+
+// Opens the date picker, recomputes the age and saves both values.
+Future<void> _selectDob(BuildContext context) async {
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: DateTime(2000),
+    firstDate: DateTime(1900),
+    lastDate: DateTime.now(),
+  );
+
+  if (picked == null) return;
+
+  int computedAge = DateTime.now().year - picked.year;
+  if (DateTime.now().month < picked.month &&
+      DateTime.now().day < picked.day) {
+    computedAge -= 1;
+  }
+
+  setState(() {
+    _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
+  });
+
+  await saveSP('dob', _dobController.text);
+  await saveSPint('age', computedAge);
+}
   // widget to modify variables with a drop menu
   Widget _getDropdownMenu(
     BuildContext context,
@@ -628,6 +714,11 @@ Widget _showDistance (BuildContext context) {
     final sp = await SharedPreferences.getInstance();
     return sp.getDouble(key);
   }
+
+  Future<void> saveSPint(String key, int value) async {
+  final sp = await SharedPreferences.getInstance();
+  await sp.setInt(key, value);
+}
 
   // Function to upload a profile picture using image_picker from the gallery.
   Future<void> _pickImage() async {

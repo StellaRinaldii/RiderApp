@@ -129,7 +129,9 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: colorScheme.secondary,
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -267,6 +269,7 @@ class _DeliveryInProgressPageState extends State<DeliveryInProgressPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

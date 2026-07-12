@@ -387,7 +387,7 @@ Future<void> _loadBatteryLevel() async {
 
         // collect a small pool of compatible candidates, so that they can
         // be ranked by points before picking the best ones.
-        while (candidates.length < neededCount * 3 && checked < _seasonWeeks) {
+        while (candidates.length < neededCount * 4 && checked < _seasonWeeks) {
           final int effectiveOffset = _weekOffset % _seasonWeeks;
           final start = _baseDate.add(Duration(days: effectiveOffset * 7));
           final end = start.add(const Duration(days: 6));

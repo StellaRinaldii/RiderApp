@@ -82,7 +82,9 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     Color iconColorLight = provider.shiftClosedByEmergency ? lightRed : kGreenLight;
   
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: iconColorLight,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -291,6 +293,7 @@ class _AftershiftpageState extends State<Aftershiftpage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

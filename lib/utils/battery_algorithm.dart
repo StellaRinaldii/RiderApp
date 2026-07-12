@@ -65,15 +65,15 @@ class Battery {
   }
 
   // Exercise heart rate is estimated automatically based on the fitness
-  // level of the subject: Beginner ~160 bpm, Intermediate ~140 bpm,
-  // Advanced ~110 bpm.
+  // level of the subject: Beginner ~185 bpm, Intermediate ~165 bpm,
+  // Advanced ~145 bpm.
   int estimateExerciseHeartRate(String fitnessLevel) {
     if (fitnessLevel == "Intermediate") {
-      return 160;
+      return 165;
     } else if (fitnessLevel == "Advanced") {
-      return 130;
+      return 145;
     }
-    return 180; // beginner (default)
+    return 185; // beginner (default)
   }
 
   // Estimates the battery reduction of a delivery BEFORE it is completed,

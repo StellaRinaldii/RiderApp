@@ -5,6 +5,8 @@ import 'package:workers_campe/models/exercise_activity.dart';
 import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
+const kGreen = Color(0xFF4CAF50);
+
 class Afterdelivery extends StatelessWidget {
   const Afterdelivery({super.key});
 
