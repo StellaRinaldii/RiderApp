@@ -5,14 +5,12 @@ import 'package:workers_campe/models/exercise_activity.dart';
 import 'package:workers_campe/providers/possible_shift_provider.dart';
 import 'package:workers_campe/screens/homepage.dart';
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
-
 class Afterdelivery extends StatelessWidget {
   const Afterdelivery({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final provider = Provider.of<PossibleShiftProvider>(
       context,
       listen: true,
@@ -45,31 +43,31 @@ class Afterdelivery extends StatelessWidget {
             : Colors.red;
 
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: colors.secondary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Delivery Completed!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: kGreen,
+                  color: colors.primary
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Your Delivery Summary:',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: kGreen,
+                  color: colors.primary
                 ),
               ),
 
@@ -143,14 +141,9 @@ class Afterdelivery extends StatelessWidget {
                             valueColor: estimatedEffortColor,
                           ),
                           _info(
-                            Icons.stars,
-                            'Points Earned',
-                            '+${shift!.points} pts',
-                          ),
-                          _info(
                             Icons.attach_money,
                             'Money Earned',
-                            '€${shift.earning.toStringAsFixed(2)}',
+                            '€${shift!.earning.toStringAsFixed(2)}',
                           ),
 
                           const Divider(),
@@ -176,12 +169,12 @@ class Afterdelivery extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 'Energy level',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: kGreen,
+                  color: colors.primary
                 ),
               ),
 
@@ -220,12 +213,12 @@ class Afterdelivery extends StatelessWidget {
               const SizedBox(height: 20),
 
               if (activity != null && activity.heartRateZones.isNotEmpty) ...[
-                const Text(
+                Text(
                   'Heart Rate Zones',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: kGreen,
+                    color: colors.primary,
                   ),
                 ),
 
@@ -243,7 +236,7 @@ class Afterdelivery extends StatelessWidget {
                 height: 54,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreen,
+                    backgroundColor: colors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),

@@ -6,14 +6,9 @@ import 'dart:convert';
 
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:workers_campe/screens/login.dart';
-import 'package:workers_campe/providers/possible_shift_provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
 
 class Profilepage extends StatefulWidget {
   const Profilepage({super.key});
@@ -35,6 +30,7 @@ class _ProfilePageState extends State<Profilepage> {
   String weight = '';
   String city = '';
   String agency = '';
+  String trainingfit = '';
   bool flag = false;
 
   // controllore per i confetti quando viene raggiunto un premio:
@@ -58,8 +54,9 @@ class _ProfilePageState extends State<Profilepage> {
   
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: colors.secondary,
       appBar: AppBar(
         title: const Text(
           "Profile Page",
@@ -69,8 +66,8 @@ class _ProfilePageState extends State<Profilepage> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: kGreen,
-        foregroundColor: kGreenLight,
+        backgroundColor: colors.primary,
+        foregroundColor: colors.secondary,
       ),
 
       body: SingleChildScrollView(
@@ -95,8 +92,8 @@ class _ProfilePageState extends State<Profilepage> {
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: kGreen, 
+                      decoration: BoxDecoration(
+                        color: colors.primary, 
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
@@ -118,7 +115,7 @@ class _ProfilePageState extends State<Profilepage> {
                             future: getSP('name'), 
                             builder: (context, snapshot){
                               final name = snapshot.data ?? '';
-                              return Text("Hello $name!", style: TextStyle(fontSize:20, fontWeight: FontWeight.bold, color: kGreen),);
+                              return Text("Hello $name!", style: TextStyle(fontSize:20, fontWeight: FontWeight.bold, color: colors.primary),);
                             }),
                             
                             const SizedBox(height: 10),
@@ -140,6 +137,7 @@ class _ProfilePageState extends State<Profilepage> {
                                     'name',
                                     name,
                                     'Insert your Name',
+                                    Icons.person_outline,
                                   ),
                                   const SizedBox(height: 5),
                                   _getInfoText(
@@ -147,13 +145,16 @@ class _ProfilePageState extends State<Profilepage> {
                                     'surname',
                                     surname,
                                     'Insert your Surname',
+                                    Icons.badge_outlined
                                   ),
                                   const SizedBox(height: 5),
-                                  _getInfoText(
-                                    context,
-                                    'gender',
-                                    gender,
-                                    'Insert your Sex (Male/Female/Other)',
+                                  _getDropdownMenu(
+                                    context, 
+                                    'gender', 
+                                    gender, 
+                                    ['Male', 'Female', 'Other'], 
+                                    "Choose your Sex ", 
+                                    Icons.wc_outlined
                                   ),
                                   const SizedBox(height: 5),
                                   _getInfoText(
@@ -161,6 +162,7 @@ class _ProfilePageState extends State<Profilepage> {
                                     'weight',
                                     weight,
                                     'Insert your Weight (Kg)',
+                                    Icons.scale_outlined,
                                   ),
                                   const SizedBox(height: 5),
                                   _getInfoText(
@@ -168,6 +170,7 @@ class _ProfilePageState extends State<Profilepage> {
                                     'height',
                                     height,
                                     'Insert your Height (cm)',
+                                    Icons.straighten_outlined,
                                   ),
                                   const SizedBox(height: 5),
                                   _getInfoText(
@@ -175,6 +178,7 @@ class _ProfilePageState extends State<Profilepage> {
                                     'city',
                                     city,
                                     'Insert the name of your City',
+                                    Icons.house,
                                   ),
                                   const SizedBox(height: 5),
                                   _getInfoText(
@@ -182,7 +186,17 @@ class _ProfilePageState extends State<Profilepage> {
                                     'agency',
                                     agency,
                                     'Insert the name of your Agency',
+                                    Icons.business
                                   ),
+                                  const SizedBox(height: 5,),
+                                  _getDropdownMenu(
+                                    context, 
+                                    "trainingstat", 
+                                    trainingfit, 
+                                    ['Beginner', 'Intermediate','Advanced'], 
+                                    'Choose your Training Level', 
+                                    Icons.directions_run_outlined,
+                                    ),
                                 ],
                               ),
                             ),
@@ -192,7 +206,7 @@ class _ProfilePageState extends State<Profilepage> {
                                   Navigator.of(context).pop();
                                 },
                                 style: TextButton.styleFrom(
-                                  foregroundColor: kGreen,
+                                  foregroundColor: colors.primary,
                                   backgroundColor: Colors.transparent,
                                 ),
                                 child: const Text("Done"),
@@ -203,7 +217,7 @@ class _ProfilePageState extends State<Profilepage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreen,
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text("Edit Profile"),
@@ -296,7 +310,7 @@ class _ProfilePageState extends State<Profilepage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              icon: const Icon(Icons.home, color: kGreen),
+              icon: Icon(Icons.home, color: colors.primary),
               onPressed: () {
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -306,13 +320,13 @@ class _ProfilePageState extends State<Profilepage> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.person, color: kGreen),
+              icon: Icon(Icons.person, color: colors.primary),
               onPressed: () {
                 // Already on ProfilePage, do nothing.
               },
             ),
             IconButton(
-              icon: const Icon(Icons.logout, color: kGreen),
+              icon: Icon(Icons.logout, color: colors.primary),
               onPressed: () {
                 _toLoginPage(context);
               },
@@ -394,6 +408,7 @@ class _ProfilePageState extends State<Profilepage> {
 
   // Shows personal information saved by the subject.
   Widget _personalInfo(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Card( 
                 color: Colors.white, //light,
                 child: Container(
@@ -403,7 +418,7 @@ class _ProfilePageState extends State<Profilepage> {
                       const SizedBox(width: 50),
                       Text("Personal Informations:", style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: kGreen,)
+                        color: colors.primary,)
                         ,),
                       SizedBox(height: 5),
                       _informationRow(context, "Gender", "gender", ""),
@@ -420,8 +435,6 @@ class _ProfilePageState extends State<Profilepage> {
                       SizedBox(height: 5),
                       _informationRow(context, "Physical fitness", "trainingstat", ""),
                       SizedBox(height: 5),
-                          //_informationRow(context, "Total Km", "gender", ""),
-                          // mancano le informazioni sui Km
 
                     ],
                   ),
@@ -435,24 +448,76 @@ class _ProfilePageState extends State<Profilepage> {
     String nomesp,
     String val,
     String texttoinsert,
+    IconData icona,
   ) {
-    return TextField(
+    return TextFormField(
       onChanged: (text) {
         setState(() {
           val = text;
           saveSP(nomesp, val);
         });
       },
+      keyboardType: TextInputType.number, 
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         labelText: nomesp,
         hintText: texttoinsert,
+        prefixIcon: Icon(icona), // 
       ),
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return texttoinsert;
+    }
+    if (double.tryParse(value.trim()) == null) {
+      return 'Please enter a valid weight';
+    }
+    return null;
+  },
+  );
+  }
+  // widget to modify variables with a drop menu
+  Widget _getDropdownMenu(
+    BuildContext context,
+    String nomesp,
+    String currentValue,
+    List<String> opzioni,
+    String texttoinsert,
+    IconData icona,
+  ) {
+    return DropdownButtonFormField<String>(
+      value: opzioni.contains(currentValue) ? currentValue : null,
+      items: opzioni.map((String opzione) {
+        return DropdownMenuItem<String>(
+          value: opzione,
+          child: Text(opzione),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        if (newValue != null) {
+          setState(() {
+            // Nota: per aggiornare la UI, la variabile passata deve 
+            // aggiornare lo stato della pagina principale.
+            saveSP(nomesp, newValue);
+          });
+        }
+      },
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
+        hintText: texttoinsert,
+        prefixIcon: Icon(icona),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return texttoinsert;
+        }
+        return null;
+      },
     );
   }
 
 // widget that shows the prizes available that the subject has gained:
 Widget _showTrophy (BuildContext context, String description, IconData icona, double soglia) {
+  final colors = Theme.of(context).colorScheme;
   // inietto il provider nel widget:
    return FutureBuilder(
                       future: getSPdouble('kilometers'), 
@@ -471,7 +536,7 @@ Widget _showTrophy (BuildContext context, String description, IconData icona, do
                             ..showSnackBar(
                               SnackBar(
                                 content: Text(description),
-                                backgroundColor: kGreen,
+                                backgroundColor: colors.primary,
                                 duration: Duration(seconds: 4),
                               ),
                             );
@@ -480,8 +545,8 @@ Widget _showTrophy (BuildContext context, String description, IconData icona, do
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(120, 120),
                         shape: StarBorder(),  // forma del premio
-                        backgroundColor: kGreen, // Colore di sfondo
-                        foregroundColor: kGreenLight, // Colore del testo/icona
+                        backgroundColor: colors.primary, // Colore di sfondo
+                        foregroundColor: colors.secondary, // Colore del testo/icona
                       ),
                       child: Icon(icona, size: 20), 
                     );
@@ -501,9 +566,9 @@ Widget _showTrophy (BuildContext context, String description, IconData icona, do
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(120, 120),
-                        shape: StarBorder(),  // forma del premio
-                        backgroundColor: CupertinoColors.opaqueSeparator, // Colore di sfondo
-                        foregroundColor: Colors.white// Colore del testo/icona
+                        shape: StarBorder(),  
+                        backgroundColor: CupertinoColors.opaqueSeparator, 
+                        foregroundColor: Colors.white
                       ),
                       child: Icon(icona, size: 20), 
                     );
@@ -543,24 +608,65 @@ Widget _showDistance (BuildContext context) {
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               );
                             },
-                          ),
-                        const Text("Total points:",
-                              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-                          ),
-                          FutureBuilder(
-                            future: getSPint('points'), 
-                            builder: (context, sp){
-                              final int value = sp.data ?? 0;
-                              return Text("$value points",
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              );
-                            },
-                          ),
+                          )
                       ]
       )
     )
   );
 }
+
+InputDecoration _inputDecoration({
+    required String label,
+    required String hint,
+    IconData? icon,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: icon != null ? Icon(icon, color: colors.primary) : null,
+      filled: true,
+      fillColor: Colors.white,
+      labelStyle: TextStyle(color: Colors.grey),
+      floatingLabelStyle: TextStyle(color: colors.primary),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: Colors.grey.shade300,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: Colors.grey.shade300,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: colors.primary,
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(
+          color: Colors.redAccent,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(
+          color: Colors.redAccent,
+          width: 1.5,
+        ),
+      ),
+    );
+  }
   // FUNCTIONS
 
   // Function to save SharedPreferences values.
@@ -621,4 +727,5 @@ Widget _showDistance (BuildContext context) {
       });
     }
   }
+  
 }

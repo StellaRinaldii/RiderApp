@@ -186,11 +186,6 @@ class _AftershiftpageState extends State<Aftershiftpage> {
                       '€${provider.totalEarnings.toStringAsFixed(2)}', iconColorDark
                     ),
                     _row(
-                      Icons.stars,
-                      'Points',
-                      provider.totalPoints.toString(), iconColorDark,
-                    ),
-                    _row(
                       Icons.route,
                       'Distance',
                       '${provider.totalDistanceKm.toStringAsFixed(2)} km', iconColorDark,
@@ -449,21 +444,38 @@ class _AftershiftpageState extends State<Aftershiftpage> {
     final TextEditingController problemController = TextEditingController();
     return Column(
       children: [
-        const Text('Describe Your Injury:'),
-        const SizedBox(height: 10), // Spazio tra testo e input
+        const Text('Describe Your Injury:', style: TextStyle(fontWeight: FontWeight.bold),),
+        const SizedBox(height: 10),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0), // Bordo interno di 32 pixel a destra e sinistra
+          padding: const EdgeInsets.symmetric(horizontal: 32.0), 
           child: TextField(
             controller: problemController,
             maxLines: 3, 
             decoration: const InputDecoration(
               hintText: 'Describe what happened here...',
               border: OutlineInputBorder(),
+              // colore del bordo
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: darkRed),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: darkRed, width: 2.0),
+              ),
             ),
           ),
         ),
         TextButton(
-            onPressed: _onProblemNo,
+            onPressed: (){
+              setState(() => _injuryAnswered = true);
+              ScaffoldMessenger.of(context)
+              ..removeCurrentSnackBar()
+              ..showSnackBar(SnackBar(
+                content: Text('Message send successfully!'),
+                backgroundColor: kGreen,
+                duration: const Duration(seconds: 4),
+              ));
+            },
+            style: TextButton.styleFrom( foregroundColor: darkRed,),
             child: const Text('Submit'),
           ),
       ],
