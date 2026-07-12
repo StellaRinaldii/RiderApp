@@ -3,8 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:workers_campe/screens/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
 
 class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
@@ -67,7 +65,7 @@ class _OnboardingState extends State<Onboarding> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: kGreen,
+                  primary: Theme.of(context).colorScheme.primary,
                 ),
           ),
           child: child!,
@@ -104,9 +102,9 @@ class _OnboardingState extends State<Onboarding> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Data saved successfully!'),
-          backgroundColor: kGreen,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
 
@@ -127,11 +125,11 @@ class _OnboardingState extends State<Onboarding> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: icon != null ? Icon(icon, color: kGreen) : null,
+      prefixIcon: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
       filled: true,
       fillColor: Colors.white,
       labelStyle: const TextStyle(color: Colors.grey),
-      floatingLabelStyle: const TextStyle(color: kGreen),
+      floatingLabelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 16,
@@ -150,8 +148,8 @@ class _OnboardingState extends State<Onboarding> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: kGreen,
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
           width: 2,
         ),
       ),
@@ -174,7 +172,7 @@ class _OnboardingState extends State<Onboarding> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
@@ -191,11 +189,11 @@ class _OnboardingState extends State<Onboarding> {
               
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Let’s know you better',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: kGreen,
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
                   height: 1.1,
@@ -300,7 +298,10 @@ class _OnboardingState extends State<Onboarding> {
 
                         TextFormField(
                           controller: _weightController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: false,
+                          ),
                           decoration: _inputDecoration(
                             label: 'Weight',
                             hint: 'Enter your weight (kg)',
@@ -321,7 +322,10 @@ class _OnboardingState extends State<Onboarding> {
 
                         TextFormField(
                           controller: _heightController,
-                          keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: false,
+                          ),
                           decoration: _inputDecoration(
                             label: 'Height',
                             hint: 'Enter your height (cm)',
@@ -401,7 +405,7 @@ class _OnboardingState extends State<Onboarding> {
                           child: ElevatedButton(
                             onPressed: _submitForm,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: kGreen,
+                              backgroundColor: Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
                               elevation: 3,
                               shape: RoundedRectangleBorder(

@@ -6,6 +6,7 @@ import '../utils/battery_algorithm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
+
 class PossibleShiftProvider extends ChangeNotifier {
   static final DateTime _baseDate = DateTime(2023, 2, 9);
   static const int _seasonWeeks = 42;
@@ -445,6 +446,13 @@ PossibleShift _buildShift(ExerciseActivity activity, int index) {
       exerciseMinutes,
       _sex ?? 'Other',
     );
+    // Battery loss estimation using the linear model
+    /*final estimation = currentBattery.lossEstimationLinear(
+      _fitnessLevel ?? 'Beginner',
+      exerciseMinutes,
+      _age ?? 30,
+      _sex ?? 'Other',
+    );*/
 
     final effort = _effort(estimation);
     final earning = double.parse((km * 0.50).clamp(3.0, 100.0).toStringAsFixed(2),);

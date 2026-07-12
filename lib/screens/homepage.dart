@@ -8,8 +8,6 @@ import 'package:workers_campe/screens/deliveryDetailPage.dart';
 import 'package:workers_campe/screens/login.dart';
 import 'package:workers_campe/screens/profilepage.dart';
 
-const Color kGreen = Color(0xFF639922);
-const Color kGreenLight = Color(0xFFEAF3DE);
 
 class HomePage extends StatefulWidget {
   final bool applySleepRecoveryAfterShift;
@@ -61,7 +59,7 @@ class _HomePageState extends State<HomePage> {
         ..showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: kGreen,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 4),
           ),
         );
@@ -71,9 +69,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kGreenLight,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
       appBar: AppBar(
-        backgroundColor: kGreen,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: FutureBuilder<String?>(
@@ -96,23 +94,23 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Energy level',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: kGreen,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 _energyCard(provider),
                 const SizedBox(height: 30),
-                const Text(
+                Text(
                   'Proposed deliveries',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: kGreen,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -133,12 +131,12 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: Column(
                           children: [
-                            const Text(
+                            Text(
                               'Current earnings',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: kGreen,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -182,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                               : () => provider.startShift(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            provider.shiftStarted ? Colors.red : kGreen,
+                            provider.shiftStarted ? Colors.red : Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
@@ -213,20 +211,43 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              icon: const Icon(Icons.home, color: kGreen),
+              icon: Icon(Icons.home, color: Theme.of(context).colorScheme.primary),
               onPressed: () {},
             ),
             IconButton(
-              icon: const Icon(Icons.person, color: kGreen),
-              onPressed: () => Navigator.pushReplacement(
-                context,
+              icon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+              onPressed: () async {
+                final provider = Provider.of<PossibleShiftProvider>(
+                  context,
+                  listen: false,
+                );
+
+                if (provider.sleepRecoveryPending){
+                  ScaffoldMessenger.of(context)
+                    ..removeCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(
+                               'You cannot go to profile page while recovery is in progress.'
+                        ),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+
+                  return;
+                }
+              
+              Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => const Profilepage(),
                 ),
-              ),
+              );
+              }
             ),
+
             IconButton(
-              icon: const Icon(Icons.logout, color: kGreen),
+              icon: Icon(Icons.logout, color: Theme.of(context).colorScheme.primary),
               onPressed: () async {
                 final provider = Provider.of<PossibleShiftProvider>(
                   context,
@@ -281,10 +302,10 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (provider.isLoading) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(color: kGreen),
+          child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
         ),
       );
     }
@@ -376,7 +397,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              Icon(icon, color: kGreen),
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -406,9 +427,9 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(15),
       ),
       child: ListTile(
-        leading: const Icon(
+        leading: Icon(
           Icons.directions_bike_rounded,
-          color: kGreen,
+          color: Theme.of(context).colorScheme.primary,
           size: 32,
         ),
         title: Text(
@@ -450,24 +471,10 @@ class _HomePageState extends State<HomePage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.emoji_events,
-              color: kGreen,
-              size: 20,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${shift.points} pts',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: kGreen,
-              ),
-            ),
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: kGreen,
+              color: Theme.of(context).colorScheme.primary,
               size: 18,
             ),
           ],

@@ -94,23 +94,34 @@ class Battery {
   }
 
   // Simplified linear alternative to lossEstimation.
-  int lossEstimationLinear(String fitnessLevel, int timeExercise) {
-    int fitnessLevelValue = 2;
-    if (fitnessLevel == "Intermediate") {
-      fitnessLevelValue = 1;
-    } else if (fitnessLevel == "Advanced") {
-      fitnessLevelValue = 0;
-    }
 
-    // coefficients of the linear model
-    double a0 = 5;
-    double a1 = 0.25;
-    // nel caso si volesse si può anche aggiungere un dislivello o altre info
-    //double a2 = ;
+  /*int lossEstimationLinear(String fitnessLevel, int timeExercise, int age, String sex,) {
+  int fitnessLevelValue = 2;
 
-    double loss = a0 * fitnessLevelValue + a1 * timeExercise;
-    return loss.round().clamp(1, 100).toInt();
+  if (fitnessLevel == "Intermediate") {
+    fitnessLevelValue = 1;
+  } else if (fitnessLevel == "Advanced") {
+    fitnessLevelValue = 0;
   }
+
+  int sexValue = 0;
+  if (sex == "Female") {
+    sexValue = 1;
+  } else if (sex == "Male") {
+    sexValue = 0;
+  } else {
+    sexValue = 0;
+  }
+
+  // coefficients of the linear model
+  double a0 = 10;     // effect of fitness level
+  double a1 = 0.25;  // effect of exercise duration
+  double a2 = 0.08;  // effect of age
+  double a3 = 2;     // small correction for sex
+
+  double loss = a0 * fitnessLevelValue + a1 * timeExercise + a2 * age + a3 * sexValue;
+  return loss.round().clamp(1, 100).toInt();
+}*/
 
   // Computes the REAL battery reduction AFTER a delivery is completed,
   // using the real average exercise heart rate of the activity and the
@@ -124,6 +135,7 @@ class Battery {
 
     // compute the loss of battery
     double loss = (15 * trimpMin) / 2.2 * timeExercise/60;
+
     return loss.round().clamp(1, 100).toInt();
   }
 
